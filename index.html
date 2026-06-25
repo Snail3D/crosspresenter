@@ -3,1956 +3,232 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CrossPresenter — AI Church Presentation</title>
+<title>Luther's Code — Church Technology That Steps Back</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0a0a1a">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
-/* ========== RESET & BASE ========== */
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
   --bg:#0a0a1a; --bg2:#12122a; --bg3:#1a1a3a;
   --text:#e8e8ff; --text2:#a0a0c0; --text3:#606080;
   --accent:#6c5ce7; --accent2:#a29bfe; --accent3:#00cec9;
-  --success:#00b894; --danger:#e74c3c; --warn:#fdcb6e;
-  --border:#2a2a4a; --radius:12px;
+  --success:#00b894; --border:#2a2a4a;
 }
-html,body { height:100%; overflow:hidden; }
-body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:14px; }
-input,textarea,select { font-family:inherit; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:16px; line-height:1.6; overflow-x:hidden; }
 
-/* ========== LAYOUT ========== */
-.app { display:flex; height:100vh; }
-.sidebar { width:320px; min-width:320px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
-.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+/* NAV */
+nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(10,10,26,.85); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; }
+.logo { font-size:22px; font-weight:800; background:linear-gradient(135deg,var(--accent2),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-decoration:none; }
+.nav-links { display:flex; gap:28px; align-items:center; }
+.nav-links a { color:var(--text2); text-decoration:none; font-size:14px; font-weight:500; transition:color .2s; }
+.nav-links a:hover { color:var(--text); }
+.nav-cta { padding:8px 20px; background:var(--accent); color:#fff !important; border-radius:8px; font-weight:600; }
+.nav-cta:hover { background:var(--accent2); color:#fff !important; }
 
-/* ========== SIDEBAR ========== */
-.sidebar-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-.logo { font-size:20px; font-weight:700; background:linear-gradient(135deg,var(--accent2),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.logo-sub { font-size:11px; color:var(--text3); }
-
-.deck-list { flex:1; overflow-y:auto; padding:8px; }
-.deck-item { padding:12px; border-radius:8px; cursor:pointer; margin-bottom:4px; transition:background .15s; }
-.deck-item:hover { background:var(--bg3); }
-.deck-item.active { background:var(--accent); }
-.deck-item-title { font-weight:600; font-size:13px; }
-.deck-item-meta { font-size:11px; color:var(--text3); margin-top:2px; }
-
-.sidebar-actions { padding:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
-
-/* ========== BUTTONS ========== */
-.btn { padding:10px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+/* HERO */
+.hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:120px 24px 60px; position:relative; }
+.hero::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:radial-gradient(ellipse at center, rgba(108,92,231,.15) 0%, transparent 70%); pointer-events:none; }
+.hero h1 { font-size:clamp(2.5rem,8vw,5.5rem); font-weight:800; line-height:1.1; margin-bottom:20px; }
+.hero h1 .gradient { background:linear-gradient(135deg,var(--accent2),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { font-size:clamp(1.1rem,2.5vw,1.6rem); color:var(--text2); max-width:680px; margin-bottom:40px; }
+.hero-buttons { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+.btn { padding:14px 32px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all .2s; }
 .btn-primary { background:var(--accent); color:#fff; }
-.btn-primary:hover { background:var(--accent2); }
-.btn-secondary { background:var(--bg3); color:var(--text); }
-.btn-secondary:hover { background:var(--border); }
-.btn-success { background:var(--success); color:#fff; }
-.btn-danger { background:var(--danger); color:#fff; }
-.btn-sm { padding:6px 12px; font-size:12px; }
-.btn-icon { width:36px; height:36px; padding:0; border-radius:8px; }
-.btn:disabled { opacity:.4; cursor:not-allowed; }
+.btn-primary:hover { background:var(--accent2); transform:translateY(-2px); }
+.btn-outline { background:transparent; color:var(--text); border:1px solid var(--border); }
+.btn-outline:hover { border-color:var(--accent2); background:var(--bg2); }
 
-/* ========== TOP BAR ========== */
-.topbar { height:56px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:12px; }
-.topbar-title { font-weight:600; font-size:15px; flex:1; }
-.topbar-controls { display:flex; gap:8px; align-items:center; }
+/* SECTIONS */
+section { padding:100px 24px; max-width:1200px; margin:0 auto; }
+.section-label { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--accent3); margin-bottom:12px; }
+.section-title { font-size:clamp(1.8rem,5vw,3rem); font-weight:700; margin-bottom:16px; line-height:1.2; }
+.section-sub { font-size:1.1rem; color:var(--text2); max-width:640px; margin-bottom:48px; }
 
-/* ========== PREVIEW AREA ========== */
-.preview-area { flex:1; display:flex; align-items:center; justify-content:center; background:#000; position:relative; overflow:hidden; }
-.preview-frame { width:100%; height:100%; position:relative; }
-.slide-canvas { width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:absolute; top:0; left:0; }
+/* PRODUCT CARDS */
+.product-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:24px; }
+.product-card { background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:32px; transition:all .3s; }
+.product-card:hover { border-color:var(--accent); transform:translateY(-4px); }
+.product-card .icon { font-size:40px; margin-bottom:16px; }
+.product-card h3 { font-size:1.3rem; font-weight:700; margin-bottom:8px; }
+.product-card p { color:var(--text2); font-size:14px; line-height:1.6; }
+.product-card .tag { display:inline-block; padding:4px 10px; background:var(--bg3); border-radius:12px; font-size:11px; font-weight:600; color:var(--accent3); margin-bottom:16px; }
+.product-card .tag.soon { color:var(--warn); }
 
-/* ========== SLIDE STYLES ========== */
-.slide { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:absolute; opacity:0; transition:opacity .3s; padding:8%; text-align:center; }
-.slide.active { opacity:1; z-index:2; }
-.slide.bg-black { background:#000; }
-.slide.bg-white { background:#fff; color:#000; }
-.slide.bg-gradient { background:linear-gradient(135deg,#1a1a3a,#0a0a1a); }
-.slide.bg-worship { background:linear-gradient(180deg,#0a0a2a 0%,#1a1a4a 50%,#0a0a2a 100%); }
-.slide.bg-nature { background:linear-gradient(135deg,#0d4f3c,#1a7a5a); }
+/* BIOS */
+.bio-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(400px,1fr)); gap:48px; }
+.bio-card { background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:40px; }
+.bio-card .avatar { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent3)); display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:800; color:#fff; margin-bottom:24px; }
+.bio-card .name { font-size:1.5rem; font-weight:700; }
+.bio-card .role { font-size:14px; color:var(--accent3); font-weight:600; margin-bottom:20px; }
+.bio-card .bio-text { font-size:15px; line-height:1.8; color:var(--text2); }
+.bio-card .bio-text p { margin-bottom:16px; }
+.bio-card .bio-text p:last-child { margin-bottom:0; }
 
-.slide h1 { font-size:clamp(2rem,6vw,5rem); font-weight:800; line-height:1.2; margin-bottom:.3em; }
-.slide h2 { font-size:clamp(1.5rem,4vw,3rem); font-weight:600; line-height:1.3; }
-.slide p { font-size:clamp(1rem,2.5vw,2rem); line-height:1.5; max-width:80%; }
-.slide .verse-ref { font-size:clamp(.9rem,2vw,1.5rem); font-style:italic; opacity:.7; margin-top:.5em; }
-.slide .lyrics { font-size:clamp(1.2rem,3.5vw,2.8rem); line-height:1.8; white-space:pre-line; font-weight:600; }
-.slide .countdown { font-size:clamp(3rem,15vw,10rem); font-weight:900; font-variant-numeric:tabular-nums; }
-.slide .notification { font-size:clamp(1.5rem,5vw,4rem); font-weight:700; padding:1em; }
+/* VALUES */
+.values-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:24px; }
+.value-card { padding:28px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; }
+.value-card .icon { font-size:28px; margin-bottom:12px; }
+.value-card h3 { font-size:1.1rem; font-weight:700; margin-bottom:6px; }
+.value-card p { font-size:14px; color:var(--text2); }
 
-/* ========== EDITOR PANEL ========== */
-.editor-panel { position:absolute; top:0; right:0; width:380px; height:100%; background:var(--bg2); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .3s; z-index:100; display:flex; flex-direction:column; }
-.editor-panel.open { transform:translateX(0); }
-.editor-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.editor-body { flex:1; overflow-y:auto; padding:16px; }
-.editor-field { margin-bottom:16px; }
-.editor-field label { display:block; font-size:12px; color:var(--text2); margin-bottom:6px; font-weight:600; }
-.editor-field input, .editor-field textarea, .editor-field select { width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; }
-.editor-field textarea { min-height:100px; resize:vertical; }
-.slide-type-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
-.slide-type-btn { padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; cursor:pointer; text-align:center; font-size:12px; transition:all .15s; }
-.slide-type-btn:hover, .slide-type-btn.selected { border-color:var(--accent); background:var(--bg3); }
+/* CTA */
+.cta-section { text-align:center; padding:120px 24px; }
+.cta-section h2 { font-size:clamp(1.8rem,5vw,3rem); font-weight:700; margin-bottom:16px; }
+.cta-section p { font-size:1.1rem; color:var(--text2); max-width:520px; margin:0 auto 40px; }
 
-/* ========== THUMBNAIL STRIP ========== */
-.thumb-strip { height:120px; min-height:120px; background:var(--bg2); border-top:1px solid var(--border); display:flex; align-items:center; padding:8px; gap:8px; overflow-x:auto; }
-.thumb { min-width:180px; width:180px; height:100px; background:var(--bg3); border:2px solid transparent; border-radius:8px; cursor:pointer; position:relative; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:8px; text-align:center; }
-.thumb:hover { border-color:var(--accent2); }
-.thumb.active { border-color:var(--accent); }
-.thumb-number { position:absolute; top:4px; left:6px; font-size:10px; color:var(--text3); font-weight:700; }
-.thumb-delete { position:absolute; top:4px; right:6px; width:18px; height:18px; border-radius:50%; background:var(--danger); color:#fff; font-size:10px; display:none; align-items:center; justify-content:center; cursor:pointer; }
-.thumb:hover .thumb-delete { display:flex; }
-.thumb-title { font-size:11px; font-weight:600; line-height:1.3; word-break:break-word; }
+/* FOOTER */
+footer { border-top:1px solid var(--border); padding:48px 24px; text-align:center; }
+footer .logo { display:inline-block; margin-bottom:16px; }
+footer p { color:var(--text3); font-size:13px; margin-bottom:8px; }
+footer a { color:var(--text2); text-decoration:none; }
+footer a:hover { color:var(--text); }
 
-/* ========== MODALS ========== */
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:1000; }
-.modal-overlay.show { display:flex; }
-.modal { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; }
-.modal h2 { margin-bottom:16px; font-size:18px; }
-.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
-
-/* ========== AI BUILDER ========== */
-.ai-builder { }
-.ai-builder textarea { width:100%; min-height:100px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; resize:vertical; }
-.ai-presets { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-.ai-preset { padding:6px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:20px; font-size:12px; cursor:pointer; }
-.ai-preset:hover { border-color:var(--accent); }
-
-/* ========== VOICE COMMAND BAR ========== */
-.voice-bar { position:fixed; bottom:140px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:200; }
-.voice-indicator { padding:8px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:30px; display:none; align-items:center; gap:8px; font-size:13px; }
-.voice-indicator.show { display:flex; }
-.voice-indicator.listening { border-color:var(--success); }
-.voice-indicator .dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
-
-/* ========== SCRIPTURE DETECTION QUEUE ========== */
-.detection-panel { position:absolute; bottom:132px; right:16px; width:360px; max-height:400px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; z-index:150; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.5); transition:transform .3s, opacity .3s; }
-.detection-panel.hidden-panel { transform:translateY(20px); opacity:0; pointer-events:none; }
-.detection-header { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--bg3); }
-.detection-header-title { font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; }
-.detection-header-title .pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1s infinite; }
-.detection-list { flex:1; overflow-y:auto; padding:8px; }
-.detection-empty { text-align:center; padding:24px 12px; color:var(--text3); font-size:12px; }
-.detection-item { display:flex; align-items:center; padding:10px; border-radius:8px; margin-bottom:6px; background:var(--bg3); border:1px solid var(--border); transition:all .2s; animation:slideIn .3s; }
-@keyframes slideIn { from{transform:translateX(20px);opacity:0;} to{transform:translateX(0);opacity:1;} }
-.detection-item.high { border-left:3px solid var(--success); }
-.detection-item.med { border-left:3px solid var(--warn); }
-.detection-item.low { border-left:3px solid var(--text3); }
-.detection-item .det-ref { font-weight:700; font-size:14px; flex:1; }
-.detection-item .det-confidence { font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:600; }
-.detection-item .det-confidence.high { background:var(--success); color:#fff; }
-.detection-item .det-confidence.med { background:var(--warn); color:#000; }
-.detection-item .det-confidence.low { background:var(--text3); color:#fff; }
-.detection-item .det-actions { display:flex; gap:4px; margin-left:8px; }
-.detection-item .det-btn { width:28px; height:28px; border-radius:6px; border:none; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; }
-.detection-item .det-btn.send { background:var(--success); color:#fff; }
-.detection-item .det-btn.dismiss { background:var(--danger); color:#fff; }
-.detection-item .det-btn.preview { background:var(--accent); color:#fff; }
-.detection-item .det-preview-text { font-size:11px; color:var(--text2); margin-top:4px; line-height:1.4; max-height:40px; overflow:hidden; text-overflow:ellipsis; }
-.detection-footer { padding:8px 14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text3); }
-.detection-mode-toggle { display:flex; align-items:center; gap:6px; cursor:pointer; }
-.detection-mode-toggle .toggle { transform:scale(.8); }
-
-/* ========== LIVE TRANSCRIPT ========== */
-.transcript-overlay { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); max-width:80%; padding:8px 16px; background:rgba(0,0,0,.7); border-radius:8px; font-size:13px; color:var(--text2); z-index:10; display:none; text-align:center; }
-.transcript-overlay.show { display:block; }
-.transcript-overlay .highlight { color:var(--accent3); font-weight:600; }
-
-/* ========== STATUS ========== */
-.status-overlay { position:absolute; top:12px; left:12px; background:rgba(0,0,0,.6); padding:6px 12px; border-radius:6px; font-size:12px; color:var(--text2); display:flex; gap:12px; align-items:center; z-index:10; }
-.status-overlay .live-dot { width:6px; height:6px; border-radius:50%; background:var(--danger); }
-
-/* ========== SETTINGS ========== */
-.settings-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
-.settings-row:last-child { border:none; }
-.toggle { width:44px; height:24px; background:var(--bg); border-radius:12px; position:relative; cursor:pointer; border:1px solid var(--border); }
-.toggle.on { background:var(--success); }
-.toggle::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition:transform .2s; }
-.toggle.on::after { transform:translateX(20px); }
-
-/* ========== UTIL ========== */
-.hidden { display:none !important; }
-.fade-in { animation:fadeIn .3s; }
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+/* RESPONSIVE */
+@media (max-width:768px) {
+  nav { padding:12px 16px; }
+  .nav-links { gap:16px; }
+  .nav-links a:not(.nav-cta) { display:none; }
+  section { padding:60px 16px; }
+  .bio-grid { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
 
-<div class="app">
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <div>
-        <div class="logo">✝ CrossPresenter</div>
-        <div class="logo-sub">AI Church Presentation</div>
-      </div>
-    </div>
-    <div class="deck-list" id="deckList"></div>
-    <div class="sidebar-actions">
-      <button class="btn btn-primary" onclick="openAIBuilder()">🤖 Build with AI</button>
-      <button class="btn btn-secondary" onclick="openSermonPrep()">📖 Sermon Prep</button>
-      <button class="btn btn-secondary" onclick="newDeck()">📋 New Deck</button>
-      <button class="btn btn-secondary" onclick="openSettings()">⚙️ Settings</button>
-    </div>
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">✝ Luther's Code</a>
+  <div class="nav-links">
+    <a href="#product">Product</a>
+    <a href="#mission">Mission</a>
+    <a href="#team">Team</a>
+    <a href="app.html" class="nav-cta">Launch App</a>
   </div>
+</nav>
 
-  <!-- MAIN -->
-  <div class="main">
-    <div class="topbar">
-      <div class="topbar-title" id="topbarTitle">No deck selected</div>
-      <div class="topbar-controls">
-        <button class="btn btn-sm btn-secondary" id="voiceBtn" onclick="toggleVoice()">🎤 Voice + AI</button>
-        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()">✏️ Edit</button>
-        <button class="btn btn-sm btn-success" onclick="present()">🖥️ Present</button>
-      </div>
-    </div>
-
-    <div class="preview-area" id="previewArea">
-      <div class="status-overlay" id="statusOverlay">
-        <span class="live-dot hidden" id="liveDot"></span>
-        <span id="statusText">Ready</span>
-        <span id="slideCounter">0 / 0</span>
-      </div>
-      <div class="preview-frame" id="previewFrame">
-        <div class="slide-canvas" id="slideCanvas">
-          <div style="text-align:center;color:var(--text3);">
-            <h2 style="font-size:2rem;margin-bottom:.5em;">Welcome to CrossPresenter</h2>
-            <p>Select or create a deck to get started</p>
-            <p style="margin-top:1em;font-size:.9rem;">Try "Build with AI" to generate a service in seconds</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Voice indicator -->
-      <div class="voice-bar">
-        <div class="voice-indicator" id="voiceIndicator">
-          <div class="dot"></div>
-          <span id="voiceText">Listening...</span>
-        </div>
-      </div>
-
-      <!-- Scripture Detection Queue -->
-      <div class="detection-panel hidden-panel" id="detectionPanel">
-        <div class="detection-header">
-          <div class="detection-header-title">
-            <span class="pulse-dot" id="detectionPulse"></span>
-            AI Scripture Detection
-          </div>
-          <button class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="clearDetectionQueue()">Clear</button>
-        </div>
-        <div class="detection-list" id="detectionList">
-          <div class="detection-empty" id="detectionEmpty">No scriptures detected yet.<br>Start speaking to see AI detection in action.</div>
-        </div>
-        <div class="detection-footer">
-          <div class="detection-mode-toggle" onclick="toggleAutoDisplay()">
-            <div class="toggle" id="autoDisplayToggle"></div>
-            <span>Auto-display detected verses</span>
-          </div>
-          <span id="detectionCount">0 detected</span>
-        </div>
-      </div>
-
-      <!-- Live Transcript Overlay -->
-      <div class="transcript-overlay" id="transcriptOverlay"></div>
-    </div>
-
-    <!-- Thumbnail strip -->
-    <div class="thumb-strip" id="thumbStrip"></div>
-
-    <!-- Editor Panel -->
-    <div class="editor-panel" id="editorPanel">
-      <div class="editor-header">
-        <h2 style="font-size:16px;">Edit Slide</h2>
-        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()">✕</button>
-      </div>
-      <div class="editor-body" id="editorBody"></div>
-    </div>
+<!-- HERO -->
+<div class="hero">
+  <h1>Technology that <span class="gradient">steps back</span><br>so people can step forward</h1>
+  <p>Luther's Code builds church technology that frees your crew to worship while they run the service. No more heads stuck behind screens. Serve and worship at the same time.</p>
+  <div class="hero-buttons">
+    <a href="app.html" class="btn btn-primary">🚀 Launch CrossPresenter</a>
+    <a href="#product" class="btn btn-outline">Learn More</a>
   </div>
 </div>
 
-<!-- MODALS -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modalContent"></div>
+<!-- PRODUCT -->
+<section id="product">
+  <div class="section-label">Our Products</div>
+  <h2 class="section-title">Built for the church, by the church</h2>
+  <p class="section-sub">Every app we build solves a real problem we've felt on a Sunday morning. Not tech for tech's sake. Tech that gets out of the way.</p>
+  
+  <div class="product-grid">
+    <div class="product-card">
+      <div class="icon">🎤</div>
+      <div class="tag">Available Now</div>
+      <h3>CrossPresenter</h3>
+      <p>AI-powered church presentation software. Listens to live audio and automatically detects Bible scriptures as your pastor speaks. Voice commands, AI deck builder, sermon prep tool, and fullscreen projection. Built for worship, not against it.</p>
+    </div>
+    <div class="product-card">
+      <div class="icon">📖</div>
+      <div class="tag soon">Coming Soon</div>
+      <h3>Sermon Studio</h3>
+      <p>Desktop sermon preparation tool. AI-assisted outlining, scripture discovery, illustration suggestions, and one-click export to CrossPresenter slides. From study to stage in record time.</p>
+    </div>
+    <div class="product-card">
+      <div class="icon">🎵</div>
+      <div class="tag soon">Coming Soon</div>
+      <h3>Worship Planner</h3>
+      <p>Plan your set list, organize song library, manage keys and tempos, and sync with your team. Built by a worship leader who knows the workflow inside out.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section id="mission">
+  <div class="section-label">Our Mission</div>
+  <h2 class="section-title">Free the crew</h2>
+  <p class="section-sub">Too many Sunday mornings, the tech team is stuck behind screens, heads down, managing slides and cues while the worship happens around them. We believe it shouldn't be that way.</p>
+  
+  <div class="values-grid">
+    <div class="value-card">
+      <div class="icon">🙏</div>
+      <h3>Serve and Worship</h3>
+      <p>The people running technology should be able to worship alongside the congregation. Present in the moment while the systems handle the timing.</p>
+    </div>
+    <div class="value-card">
+      <div class="icon">⚙️</div>
+      <h3>Automation with Purpose</h3>
+      <p>We're not replacing anyone. We're freeing them to be more present, more engaged, and more available to serve where it matters.</p>
+    </div>
+    <div class="value-card">
+      <div class="icon">教堂</div>
+      <h3>Built by the Church</h3>
+      <p>Every feature comes from real Sunday morning experience. We build what we need, what our church needs, and what we know will help yours.</p>
+    </div>
+    <div class="value-card">
+      <div class="icon">🔓</div>
+      <h3>Accessible to All</h3>
+      <p>Powerful technology shouldn't require a massive budget or a dedicated media team. We're building tools that work for any church, any size.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="section-label">The Team</div>
+  <h2 class="section-title">Two guys, one mission</h2>
+  <p class="section-sub">A worship leader who spots what's missing and an agentic coder who ships what he envisions.</p>
+  
+  <div class="bio-grid">
+    <!-- ERIC -->
+    <div class="bio-card">
+      <div class="avatar">EW</div>
+      <div class="name">Eric Woodard</div>
+      <div class="role">Co-Founder, Engineering</div>
+      <div class="bio-text">
+        <p>Eric Woodard is an evangelist, father of two daughters, entrepreneur, and agentic coder since 2024. He has a passion for systems architecture, streamlining, and automation, not for the sake of technology itself, but for what it gives back to people.</p>
+        <p>His goal isn't to replace the crew. It's to free them. Too many Sunday mornings, the tech team is stuck behind screens, heads down, managing slides and cues while the worship happens around them. Eric believes it shouldn't be that way. The people running the technology should be able to worship alongside the congregation, present in the moment, while the systems handle the timing. Let the crew give direction and still be in the room. Let them serve and worship at the same time.</p>
+        <p>That's the heart behind Luther's Code: technology that steps back so people can step forward.</p>
+      </div>
+    </div>
+    
+    <!-- JUDAH -->
+    <div class="bio-card">
+      <div class="avatar">JW</div>
+      <div class="name">Judah Webb</div>
+      <div class="role">Co-Founder, Product & Ministry</div>
+      <div class="bio-text">
+        <p>Judah Webb grew up in ministry. With parents deeply involved in ministry work for decades, church life isn't something Judah stumbled into. It's the air he's breathed since childhood. By the time most kids were figuring out what they wanted to do, Judah was already serving in church ministry, learning the rhythms of worship, tech, and production from the ground up.</p>
+        <p>Today, Judah serves as worship leader, bringing over two decades of hands-on ministry experience to everything he touches. He's the rare blend of creative and technical, equally at home leading a congregation in worship as he is behind a soundboard, designing stage sets, or building production workflows that make Sunday mornings run seamlessly.</p>
+        <p>His superpower is spotting what's missing. Where others see a smooth service, Judah sees the friction. The manual slide clicks, the fumbled transitions, the moments where technology gets in the way of worship instead of enabling it. That instinct for "this could be better" is what drives Luther's Code.</p>
+        <p>Judah lives with his wife and their young daughter.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Ready to transform your worship services?</h2>
+  <p>Launch CrossPresenter now. No download required. Works in your browser.</p>
+  <a href="app.html" class="btn btn-primary" style="font-size:17px; padding:18px 40px;">🚀 Launch CrossPresenter</a>
 </div>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#" class="logo">✝ Luther's Code</a>
+  <p>Church technology that steps back so people can step forward.</p>
+  <p>© 2026 Luther's Code. Built with conviction.</p>
+</footer>
 
 <script>
-// ============================================================
-// CROSSPRESENTER — AI Church Presentation PWA
-// ============================================================
-
-const App = {
-  decks: [],
-  currentDeckId: null,
-  currentSlideIdx: 0,
-  isPresenting: false,
-  voiceListening: false,
-  settings: {
-    bibleVersion: 'KJV',
-    aiApiKey: '',
-    aiProvider: 'openai',
-    autoAdvance: false,
-    voiceCommands: true,
-  },
-  recognition: null,
-  bibleCache: {},
-};
-
-// ---------- PERSISTENCE ----------
-function save() {
-  localStorage.setItem('crosspresenter', JSON.stringify({
-    decks: App.decks,
-    settings: App.settings,
-  }));
-}
-
-function load() {
-  const raw = localStorage.getItem('crosspresenter');
-  if (raw) {
-    const data = JSON.parse(raw);
-    App.decks = data.decks || [];
-    if (data.settings) Object.assign(App.settings, data.settings);
-  }
-  if (App.decks.length === 0) {
-    createDemoDeck();
-  }
-}
-
-function createDemoDeck() {
-  const deck = {
-    id: 'demo-' + Date.now(),
-    title: 'Sunday Service — Demo',
-    created: Date.now(),
-    slides: [
-      { type:'welcome', bg:'gradient', title:'Welcome to Church', subtitle:'We\'re glad you\'re here' },
-      { type:'worship', bg:'worship', lyrics:'How great is our God\nSing with me\nHow great is our God', title:'How Great Is Our God' },
-      { type:'verse', bg:'black', verseRef:'John 3:16', verseText:'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.' },
-      { type:'announcement', bg:'gradient', title:'Upcoming Events', text:'Wednesday Bible Study — 7pm\nFriday Youth Night — 6pm\nSunday Service — 10am' },
-      { type:'blank', bg:'black' },
-    ],
-  };
-  App.decks.push(deck);
-  App.currentDeckId = deck.id;
-  save();
-}
-
-// ---------- DECK MANAGEMENT ----------
-function newDeck() {
-  const deck = {
-    id: 'deck-' + Date.now(),
-    title: 'New Deck',
-    created: Date.now(),
-    slides: [
-      { type:'welcome', bg:'gradient', title:'Welcome', subtitle:'' },
-    ],
-  };
-  App.decks.push(deck);
-  App.currentDeckId = deck.id;
-  App.currentSlideIdx = 0;
-  save();
-  renderAll();
-}
-
-function getDeck() { return App.decks.find(d => d.id === App.currentDeckId); }
-
-function deleteDeck(id) {
-  App.decks = App.decks.filter(d => d.id !== id);
-  if (App.currentDeckId === id) App.currentDeckId = App.decks[0]?.id || null;
-  save();
-  renderAll();
-}
-
-// ---------- SLIDE RENDERING ----------
-function renderSlide(slide, container) {
-  const div = document.createElement('div');
-  div.className = `slide bg-${slide.bg || 'black'}`;
-
-  switch(slide.type) {
-    case 'welcome':
-      div.innerHTML = `<h1>${esc(slide.title || '')}</h1><p style="margin-top:.5em;opacity:.8;">${esc(slide.subtitle || '')}</p>`;
-      break;
-    case 'worship':
-      div.innerHTML = slide.title ? `<h2 style="margin-bottom:.3em;">${esc(slide.title)}</h2>` : '';
-      div.innerHTML += `<div class="lyrics">${esc(slide.lyrics || '')}</div>`;
-      break;
-    case 'verse':
-      div.innerHTML = `<p>${esc(slide.verseText || 'Loading verse...')}</p><div class="verse-ref">— ${esc(slide.verseRef || '')}</div>`;
-      break;
-    case 'announcement':
-      div.innerHTML = `<h2 style="margin-bottom:.5em;">${esc(slide.title || '')}</h2><p style="white-space:pre-line;">${esc(slide.text || '')}</p>`;
-      break;
-    case 'countdown':
-      div.innerHTML = `<div class="countdown" id="countdownEl">${formatCountdown(slide.seconds || 300)}</div>`;
-      break;
-    case 'notification':
-      div.innerHTML = `<div class="notification">${esc(slide.text || '')}</div>`;
-      break;
-    case 'image':
-      div.innerHTML = slide.url ? `<img src="${slide.url}" style="max-width:100%;max-height:100%;object-fit:contain;">` : `<p>Image slide</p>`;
-      break;
-    case 'video':
-      div.innerHTML = slide.url ? `<video src="${slide.url}" autoplay loop style="max-width:100%;max-height:100%;"></video>` : `<p>Video slide</p>`;
-      break;
-    case 'blank':
-    default:
-      break;
-  }
-
-  container.appendChild(div);
-  return div;
-}
-
-function renderCurrentSlide() {
-  const deck = getDeck();
-  const canvas = document.getElementById('slideCanvas');
-  canvas.innerHTML = '';
-
-  if (!deck || !deck.slides.length) {
-    canvas.innerHTML = `<div style="text-align:center;color:var(--text3);"><p>This deck has no slides</p><button class="btn btn-primary" style="margin-top:1em;" onclick="addSlide()">Add Slide</button></div>`;
-    updateStatus();
-    return;
-  }
-
-  deck.slides.forEach((slide, i) => {
-    const el = renderSlide(slide, canvas);
-    if (i === App.currentSlideIdx) el.classList.add('active');
-  });
-
-  updateStatus();
-}
-
-function goToSlide(idx) {
-  const deck = getDeck();
-  if (!deck) return;
-  App.currentSlideIdx = Math.max(0, Math.min(idx, deck.slides.length - 1));
-  renderCurrentSlide();
-  renderThumbs();
-  save();
-}
-
-function nextSlide() { goToSlide(App.currentSlideIdx + 1); }
-function prevSlide() { goToSlide(App.currentSlideIdx - 1); }
-
-// ---------- STATUS ----------
-function updateStatus() {
-  const deck = getDeck();
-  const counter = document.getElementById('slideCounter');
-  const title = document.getElementById('topbarTitle');
-  if (deck) {
-    counter.textContent = `${App.currentSlideIdx + 1} / ${deck.slides.length}`;
-    title.textContent = deck.title;
-  } else {
-    counter.textContent = '0 / 0';
-    title.textContent = 'No deck selected';
-  }
-}
-
-// ---------- THUMBNAILS ----------
-function renderThumbs() {
-  const deck = getDeck();
-  const strip = document.getElementById('thumbStrip');
-  strip.innerHTML = '';
-
-  if (!deck) return;
-
-  // Add slide button
-  const addBtn = document.createElement('div');
-  addBtn.className = 'thumb';
-  addBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--accent2);';
-  addBtn.innerHTML = '+';
-  addBtn.onclick = () => addSlide();
-  strip.appendChild(addBtn);
-
-  deck.slides.forEach((slide, i) => {
-    const thumb = document.createElement('div');
-    thumb.className = 'thumb' + (i === App.currentSlideIdx ? ' active' : '');
-    thumb.style.background = getBgColor(slide.bg);
-    thumb.innerHTML = `
-      <span class="thumb-number">${i + 1}</span>
-      <span class="thumb-delete" onclick="event.stopPropagation();deleteSlide(${i})">✕</span>
-      <span class="thumb-title" style="color:${getFgColor(slide.bg)}">${getThumbTitle(slide)}</span>
-    `;
-    thumb.onclick = () => goToSlide(i);
-    thumb.ondblclick = () => { goToSlide(i); openEditor(i); };
-    strip.appendChild(thumb);
-  });
-}
-
-function getBgColor(bg) {
-  const map = { black:'#000', white:'#fff', gradient:'#1a1a3a', worship:'#1a1a4a', nature:'#0d4f3c' };
-  return map[bg] || '#000';
-}
-function getFgColor(bg) {
-  return bg === 'white' ? '#000' : '#fff';
-}
-function getThumbTitle(slide) {
-  switch(slide.type) {
-    case 'welcome': return slide.title || 'Welcome';
-    case 'worship': return slide.title || 'Worship';
-    case 'verse': return slide.verseRef || 'Verse';
-    case 'announcement': return slide.title || 'Announcement';
-    case 'countdown': return '⏱ Countdown';
-    case 'notification': return slide.text || 'Notification';
-    case 'image': return '🖼 Image';
-    case 'video': return '🎬 Video';
-    case 'blank': return '— Blank —';
-    default: return 'Slide';
-  }
-}
-
-// ---------- SLIDE MANAGEMENT ----------
-function addSlide(type='welcome') {
-  const deck = getDeck();
-  if (!deck) return;
-  const templates = {
-    welcome: { type:'welcome', bg:'gradient', title:'New Welcome', subtitle:'' },
-    worship: { type:'worship', bg:'worship', title:'', lyrics:'' },
-    verse: { type:'verse', bg:'black', verseRef:'', verseText:'' },
-    announcement: { type:'announcement', bg:'gradient', title:'Announcement', text:'' },
-    blank: { type:'blank', bg:'black' },
-    countdown: { type:'countdown', bg:'gradient', seconds:300 },
-    notification: { type:'notification', bg:'black', text:'' },
-    image: { type:'image', bg:'black', url:'' },
-    video: { type:'video', bg:'black', url:'' },
-  };
-  deck.slides.push(templates[type] || templates.welcome);
-  App.currentSlideIdx = deck.slides.length - 1;
-  save();
-  renderAll();
-  openEditor(App.currentSlideIdx);
-}
-
-function deleteSlide(idx) {
-  const deck = getDeck();
-  if (!deck) return;
-  deck.slides.splice(idx, 1);
-  if (App.currentSlideIdx >= deck.slides.length) App.currentSlideIdx = deck.slides.length - 1;
-  if (App.currentSlideIdx < 0) App.currentSlideIdx = 0;
-  save();
-  renderAll();
-}
-
-// ---------- EDITOR ----------
-let editingSlideIdx = null;
-
-function toggleEditor() {
-  const panel = document.getElementById('editorPanel');
-  if (panel.classList.contains('open')) {
-    panel.classList.remove('open');
-  } else {
-    if (editingSlideIdx === null) editingSlideIdx = App.currentSlideIdx;
-    openEditor(editingSlideIdx);
-  }
-}
-
-function openEditor(idx) {
-  const deck = getDeck();
-  if (!deck || idx === null || idx === undefined || idx < 0 || idx >= deck.slides.length) return;
-  editingSlideIdx = idx;
-  const slide = deck.slides[idx];
-  const body = document.getElementById('editorBody');
-
-  const typeOptions = [
-    ['welcome','👋 Welcome'], ['worship','🎵 Worship'], ['verse','📖 Verse'],
-    ['announcement','📢 Announcement'], ['blank','⬛ Blank'],
-    ['countdown','⏱ Countdown'], ['notification','🔔 Notification'],
-    ['image','🖼 Image'], ['video','🎬 Video'],
-  ];
-
-  const bgOptions = [
-    ['black','Black'], ['white','White'], ['gradient','Purple Gradient'],
-    ['worship','Worship Blue'], ['nature','Nature Green'],
-  ];
-
-  let html = `
-    <div class="editor-field">
-      <label>Slide Type</label>
-      <div class="slide-type-grid">
-        ${typeOptions.map(([val,label]) =>
-          `<div class="slide-type-btn ${slide.type===val?'selected':''}" onclick="changeSlideType('${val}')">${label}</div>`
-        ).join('')}
-      </div>
-    </div>
-    <div class="editor-field">
-      <label>Background</label>
-      <select onchange="updateSlideField('bg', this.value)">
-        ${bgOptions.map(([val,label]) => `<option value="${val}" ${slide.bg===val?'selected':''}>${label}</option>`).join('')}
-      </select>
-    </div>
-  `;
-
-  // Type-specific fields
-  switch(slide.type) {
-    case 'welcome':
-      html += textField('title','Title',slide.title);
-      html += textField('subtitle','Subtitle',slide.subtitle);
-      break;
-    case 'worship':
-      html += textField('title','Song Title',slide.title);
-      html += textAreaField('lyrics','Lyrics (one line per slide phrase)',slide.lyrics);
-      break;
-    case 'verse':
-      html += textField('verseRef','Verse Reference',slide.verseRef);
-      html += `<button class="btn btn-sm btn-primary" style="margin-bottom:12px;" onclick="lookupVerse()">📖 Fetch Verse from Bible API</button>`;
-      html += textAreaField('verseText','Verse Text',slide.verseText);
-      break;
-    case 'announcement':
-      html += textField('title','Title',slide.title);
-      html += textAreaField('text','Content',slide.text);
-      break;
-    case 'countdown':
-      html += numberField('seconds','Duration (seconds)',slide.seconds||300);
-      break;
-    case 'notification':
-      html += textAreaField('text','Message',slide.text);
-      break;
-    case 'image':
-    case 'video':
-      html += textField('url','Media URL',slide.url);
-      break;
-  }
-
-  html += `
-    <div style="margin-top:20px;display:flex;gap:8px;">
-      <button class="btn btn-sm btn-danger" onclick="deleteSlide(${idx});closeEditor()">🗑 Delete</button>
-      <button class="btn btn-sm btn-secondary" onclick="duplicateSlide(${idx})">📋 Duplicate</button>
-    </div>
-  `;
-
-  body.innerHTML = html;
-  document.getElementById('editorPanel').classList.add('open');
-}
-
-function closeEditor() {
-  document.getElementById('editorPanel').classList.remove('open');
-  editingSlideIdx = null;
-}
-
-function changeSlideType(type) {
-  if (editingSlideIdx === null) return;
-  const deck = getDeck();
-  const slide = deck.slides[editingSlideIdx];
-  slide.type = type;
-  // Initialize missing fields
-  const defaults = {
-    title:'', subtitle:'', lyrics:'', verseRef:'', verseText:'',
-    text:'', url:'', seconds:300,
-  };
-  Object.keys(defaults).forEach(k => { if (!(k in slide)) slide[k] = defaults[k]; });
-  save();
-  openEditor(editingSlideIdx);
-  renderCurrentSlide();
-  renderThumbs();
-}
-
-function updateSlideField(field, value) {
-  if (editingSlideIdx === null) return;
-  const deck = getDeck();
-  deck.slides[editingSlideIdx][field] = value;
-  save();
-  renderCurrentSlide();
-  renderThumbs();
-}
-
-function duplicateSlide(idx) {
-  const deck = getDeck();
-  const copy = JSON.parse(JSON.stringify(deck.slides[idx]));
-  deck.slides.splice(idx + 1, 0, copy);
-  App.currentSlideIdx = idx + 1;
-  editingSlideIdx = idx + 1;
-  save();
-  renderAll();
-  openEditor(idx + 1);
-}
-
-// Editor field helpers
-function textField(field, label, value) {
-  return `<div class="editor-field"><label>${label}</label><input type="text" value="${esc(value||'')}" onchange="updateSlideField('${field}',this.value)"></div>`;
-}
-function textAreaField(field, label, value) {
-  return `<div class="editor-field"><label>${label}</label><textarea onchange="updateSlideField('${field}',this.value)">${esc(value||'')}</textarea></div>`;
-}
-function numberField(field, label, value) {
-  return `<div class="editor-field"><label>${label}</label><input type="number" value="${value||''}" onchange="updateSlideField('${field}',parseInt(this.value))"></div>`;
-}
-
-// ---------- DECK LIST ----------
-function renderDeckList() {
-  const list = document.getElementById('deckList');
-  list.innerHTML = '';
-  App.decks.forEach(deck => {
-    const item = document.createElement('div');
-    item.className = 'deck-item' + (deck.id === App.currentDeckId ? ' active' : '');
-    const date = new Date(deck.created).toLocaleDateString();
-    item.innerHTML = `
-      <div class="deck-item-title">${esc(deck.title)}</div>
-      <div class="deck-item-meta">${deck.slides.length} slides · ${date}</div>
-    `;
-    item.onclick = () => {
-      App.currentDeckId = deck.id;
-      App.currentSlideIdx = 0;
-      editingSlideIdx = null;
-      renderAll();
-    };
-    item.oncontextmenu = (e) => { e.preventDefault(); renameDeck(deck.id); };
-    list.appendChild(item);
-  });
-}
-
-function renameDeck(id) {
-  const deck = App.decks.find(d => d.id === id);
-  const name = prompt('Deck name:', deck.title);
-  if (name) { deck.title = name; save(); renderDeckList(); updateStatus(); }
-}
-
-// ---------- BIBLE API ----------
-async function lookupVerse() {
-  const deck = getDeck();
-  if (!deck || editingSlideIdx === null) return;
-  const slide = deck.slides[editingSlideIdx];
-  if (!slide.verseRef) { alert('Enter a verse reference first'); return; }
-
-  const ref = slide.verseRef.trim().replace(/\s+/g, '+');
-  const version = App.settings.bibleVersion || 'KJV';
-  const cacheKey = `${ref}-${version}`;
-
-  if (App.bibleCache[cacheKey]) {
-    slide.verseText = App.bibleCache[cacheKey];
-    save(); renderCurrentSlide(); openEditor(editingSlideIdx);
-    return;
-  }
-
-  try {
-    const resp = await fetch(`https://bible-api.com/${ref}?translation=${version}`);
-    const data = await resp.json();
-    if (data.text) {
-      slide.verseText = data.text.trim();
-      App.bibleCache[cacheKey] = slide.verseText;
-      save(); renderCurrentSlide(); openEditor(editingSlideIdx);
-    } else {
-      alert('Verse not found');
-    }
-  } catch(e) {
-    alert('Failed to fetch verse: ' + e.message);
-  }
-}
-
-// Quick verse lookup from voice/command
-async function quickVerse(ref) {
-  const deck = getDeck();
-  if (!deck) return;
-  const refEncoded = ref.trim().replace(/\s+/g, '+');
-  const version = App.settings.bibleVersion || 'KJV';
-  const cacheKey = `${refEncoded}-${version}`;
-
-  let text;
-  if (App.bibleCache[cacheKey]) {
-    text = App.bibleCache[cacheKey];
-  } else {
-    const resp = await fetch(`https://bible-api.com/${refEncoded}?translation=${version}`);
-    const data = await resp.json();
-    text = data.text?.trim();
-    if (text) App.bibleCache[cacheKey] = text;
-  }
-
-  if (text) {
-    const slide = { type:'verse', bg:'black', verseRef:ref, verseText:text };
-    deck.slides.push(slide);
-    App.currentSlideIdx = deck.slides.length - 1;
-    save(); renderAll();
-    flashStatus(`📖 ${ref} added`);
-  } else {
-    flashStatus('❌ Verse not found: ' + ref);
-  }
-}
-
-// ---------- VOICE COMMANDS ----------
-function toggleVoice() {
-  if (App.voiceListening) {
-    stopVoice();
-  } else {
-    startVoice();
-  }
-}
-
-function startVoice() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    alert('Voice recognition not supported in this browser. Try Chrome or Edge.');
-    return;
-  }
-
-  App.recognition = new SR();
-  App.recognition.continuous = true;
-  App.recognition.interimResults = false;
-  App.recognition.lang = 'en-US';
-
-  App.recognition.onresult = (event) => {
-    const transcript = event.results[event.results.length - 1][0].transcript.trim();
-    console.log('Voice:', transcript);
-    const lower = transcript.toLowerCase();
-
-    // Show live transcript overlay
-    showTranscript(transcript);
-
-    // 1. Run scripture detection on everything spoken
-    const detections = detectScriptures(transcript);
-
-    // 2. Check for explicit voice commands
-    if (!isCommand(lower, detections)) {
-      // Not a command — feed to scripture detection
-      if (detections.length > 0) {
-        detections.forEach(d => addToDetectionQueue(d));
-      }
-    } else {
-      handleVoiceCommand(lower);
-    }
-  };
-
-  App.recognition.onerror = (e) => {
-    console.error('Voice error:', e.error);
-    if (e.error === 'not-allowed') {
-      alert('Microphone access denied. Please allow microphone access in your browser settings.');
-      stopVoice();
-    }
-  };
-
-  App.recognition.onend = () => {
-    if (App.voiceListening) {
-      try { App.recognition.start(); } catch(e) {}
-    }
-  };
-
-  try {
-    App.recognition.start();
-    App.voiceListening = true;
-    document.getElementById('voiceBtn').textContent = '🔴 Listening';
-    document.getElementById('voiceBtn').classList.add('btn-danger');
-    document.getElementById('voiceBtn').classList.remove('btn-secondary');
-    document.getElementById('voiceIndicator').classList.add('show', 'listening');
-    document.getElementById('voiceText').textContent = 'Listening for commands...';
-    // Show scripture detection panel
-    document.getElementById('detectionPanel').classList.remove('hidden-panel');
-    document.getElementById('detectionPulse').style.display = 'inline-block';
-    flashStatus('🎤 Voice + Scripture Detection active');
-  } catch(e) {
-    console.error(e);
-  }
-}
-
-function stopVoice() {
-  App.voiceListening = false;
-  if (App.recognition) {
-    App.recognition.onend = null;
-    App.recognition.stop();
-    App.recognition = null;
-  }
-  document.getElementById('voiceBtn').textContent = '🎤 Voice + AI';
-  document.getElementById('voiceBtn').classList.remove('btn-danger');
-  document.getElementById('voiceBtn').classList.add('btn-secondary');
-  document.getElementById('voiceIndicator').classList.remove('show', 'listening');
-  document.getElementById('detectionPanel').classList.add('hidden-panel');
-  document.getElementById('transcriptOverlay').classList.remove('show');
-  flashStatus('Voice commands off');
-}
-
-function handleVoiceCommand(transcript) {
-  document.getElementById('voiceText').textContent = `"${transcript}"`;
-
-  // Command patterns
-  const versePattern = /(?:bring up|show|display|pull up|go to)\s+([\w\s]+\d+:\d+(?:-\d+)?)/i;
-  const versePattern2 = /^([\w\s]+\d+:\d+(?:-\d+)?)$/i;
-
-  if (/next (?:slide )?please|next slide|go next|advance/i.test(transcript)) {
-    nextSlide();
-    flashStatus('▶ Next slide');
-  } else if (/previous|go back|last slide|back/i.test(transcript)) {
-    prevSlide();
-    flashStatus('◀ Previous slide');
-  } else if (/blank|black screen|clear/i.test(transcript)) {
-    addBlankSlide();
-    flashStatus('⬛ Blank screen');
-  } else if (/first slide|go to start|beginning/i.test(transcript)) {
-    goToSlide(0);
-    flashStatus('⏮ First slide');
-  } else if (/last slide|go to end|final slide/i.test(transcript)) {
-    const deck = getDeck();
-    if (deck) goToSlide(deck.slides.length - 1);
-    flashStatus('⏭ Last slide');
-  } else if (versePattern.test(transcript)) {
-    const match = transcript.match(versePattern);
-    quickVerse(match[1]);
-  } else if (versePattern2.test(transcript)) {
-    const match = transcript.match(versePattern2);
-    quickVerse(match[1]);
-  } else if (/countdown|timer/i.test(transcript)) {
-    const secondsMatch = transcript.match(/(\d+)\s*(?:minute|min|second|sec)/i);
-    const seconds = secondsMatch ? parseTimeStr(secondsMatch[0]) : 300;
-    addCountdownSlide(seconds);
-    flashStatus('⏱ Countdown added');
-  } else if (/announcement/i.test(transcript)) {
-    addSlide('announcement');
-    flashStatus('📢 Announcement slide');
-  } else {
-    console.log('Unrecognized command:', transcript);
-    flashStatus(`🤔 Didn't catch: "${transcript}"`);
-  }
-}
-
-function addBlankSlide() {
-  const deck = getDeck();
-  if (!deck) return;
-  deck.slides.push({ type:'blank', bg:'black' });
-  App.currentSlideIdx = deck.slides.length - 1;
-  save(); renderAll();
-}
-
-function addCountdownSlide(seconds) {
-  const deck = getDeck();
-  if (!deck) return;
-  deck.slides.push({ type:'countdown', bg:'gradient', seconds });
-  App.currentSlideIdx = deck.slides.length - 1;
-  save(); renderAll();
-}
-
-function parseTimeStr(str) {
-  const m = str.match(/(\d+)\s*minute/i);
-  const s = str.match(/(\d+)\s*second/i);
-  let total = 0;
-  if (m) total += parseInt(m[1]) * 60;
-  if (s) total += parseInt(s[1]);
-  return total || 300;
-}
-
-// ============================================================
-// SCRIPTURE DETECTION ENGINE
-// ============================================================
-
-// Bible book names with aliases for fuzzy matching
-const BIBLE_BOOKS = [
-  // Old Testament
-  { name:'Genesis', aliases:['genesis','gen','ge'] },
-  { name:'Exodus', aliases:['exodus','exod','ex'] },
-  { name:'Leviticus', aliases:['leviticus','lev','lv'] },
-  { name:'Numbers', aliases:['numbers','num','nm'] },
-  { name:'Deuteronomy', aliases:['deuteronomy','deut','dt'] },
-  { name:'Joshua', aliases:['joshua','josh','jos'] },
-  { name:'Judges', aliases:['judges','judg','jdg'] },
-  { name:'Ruth', aliases:['ruth','rut','ru'] },
-  { name:'1 Samuel', aliases:['1 samuel','1 sam','1sam','first samuel','i samuel','first sam','1st samuel'] },
-  { name:'2 Samuel', aliases:['2 samuel','2 sam','2sam','second samuel','ii samuel','second sam','2nd samuel'] },
-  { name:'1 Kings', aliases:['1 kings','1 kgs','1ki','first kings','i kings','1st kings'] },
-  { name:'2 Kings', aliases:['2 kings','2 kgs','2ki','second kings','ii kings','2nd kings'] },
-  { name:'1 Chronicles', aliases:['1 chronicles','1 chron','1chr','first chronicles','i chronicles','1st chronicles'] },
-  { name:'2 Chronicles', aliases:['2 chronicles','2 chron','2chr','second chronicles','ii chronicles','2nd chronicles'] },
-  { name:'Ezra', aliases:['ezra','ezr'] },
-  { name:'Nehemiah', aliases:['nehemiah','neh'] },
-  { name:'Esther', aliases:['esther','est'] },
-  { name:'Job', aliases:['job'] },
-  { name:'Psalm', aliases:['psalm','psalms','ps','pss'] },
-  { name:'Proverbs', aliases:['proverbs','prov','prv'] },
-  { name:'Ecclesiastes', aliases:['ecclesiastes','eccles','ecc','eccl'] },
-  { name:'Song of Solomon', aliases:['song of solomon','song of songs','sos','song','canticles'] },
-  { name:'Isaiah', aliases:['isaiah','isa','is'] },
-  { name:'Jeremiah', aliases:['jeremiah','jer'] },
-  { name:'Lamentations', aliases:['lamentations','lam'] },
-  { name:'Ezekiel', aliases:['ezekiel','ezek','eze'] },
-  { name:'Daniel', aliases:['daniel','dan','dn'] },
-  { name:'Hosea', aliases:['hosea','hos'] },
-  { name:'Joel', aliases:['joel'] },
-  { name:'Amos', aliases:['amos','am'] },
-  { name:'Obadiah', aliases:['obadiah','obad','ob'] },
-  { name:'Jonah', aliases:['jonah','jon'] },
-  { name:'Micah', aliases:['micah','mic'] },
-  { name:'Nahum', aliases:['nahum','nah'] },
-  { name:'Habakkuk', aliases:['habakkuk','hab','habak'] },
-  { name:'Zephaniah', aliases:['zephaniah','zeph','zep'] },
-  { name:'Haggai', aliases:['haggai','hag'] },
-  { name:'Zechariah', aliases:['zechariah','zech','zec'] },
-  { name:'Malachi', aliases:['malachi','mal'] },
-  // New Testament
-  { name:'Matthew', aliases:['matthew','matt','mt'] },
-  { name:'Mark', aliases:['mark','mk'] },
-  { name:'Luke', aliases:['luke','lk'] },
-  { name:'John', aliases:['john','jn','joh'] },
-  { name:'Acts', aliases:['acts','ac'] },
-  { name:'Romans', aliases:['romans','rom','ro'] },
-  { name:'1 Corinthians', aliases:['1 corinthians','1 cor','1cor','first corinthians','i corinthians'] },
-  { name:'2 Corinthians', aliases:['2 corinthians','2 cor','2cor','second corinthians','ii corinthians'] },
-  { name:'Galatians', aliases:['galatians','gal'] },
-  { name:'Ephesians', aliases:['ephesians','eph'] },
-  { name:'Philippians', aliases:['philippians','phil','php'] },
-  { name:'Colossians', aliases:['colossians','col'] },
-  { name:'1 Thessalonians', aliases:['1 thessalonians','1 thess','1thess','first thessalonians','i thessalonians'] },
-  { name:'2 Thessalonians', aliases:['2 thessalonians','2 thess','2thess','second thessalonians','ii thessalonians'] },
-  { name:'1 Timothy', aliases:['1 timothy','1 tim','1tim','first timothy','i timothy'] },
-  { name:'2 Timothy', aliases:['2 timothy','2 tim','2tim','second timothy','ii timothy'] },
-  { name:'Titus', aliases:['titus','tit'] },
-  { name:'Philemon', aliases:['philemon','phm','phlm'] },
-  { name:'Hebrews', aliases:['hebrews','heb'] },
-  { name:'James', aliases:['james','jas','jm'] },
-  { name:'1 Peter', aliases:['1 peter','1 pet','1pet','first peter','i peter'] },
-  { name:'2 Peter', aliases:['2 peter','2 pet','2pet','second peter','ii peter'] },
-  { name:'1 John', aliases:['1 john','1 jn','1jn','first john','i john'] },
-  { name:'2 John', aliases:['2 john','2 jn','2jn','second john','ii john'] },
-  { name:'3 John', aliases:['3 john','3 jn','3jn','third john','iii john'] },
-  { name:'Jude', aliases:['jude','jd'] },
-  { name:'Revelation', aliases:['revelation','revelations','rev','re'] },
-];
-
-// Detection state
-App.detectionQueue = [];
-App.autoDisplay = false;
-App.recentDetections = new Set(); // dedupe within time window
-
-function detectScriptures(text) {
-  const lower = text.toLowerCase();
-  const detections = [];
-
-  // Pattern 1: "Book Chapter:Verse" or "Book Chapter:Verse-Verse" (standard format)
-  // e.g., "John 3:16", "Romans 8:28", "Genesis 1:1-3", "1 Corinthians 13:4"
-  const pattern1 = /\b((?:first|second|third|[123]\s)?\s*[\w]+(?:\s+\w+)?)\s+(\d+):(\d+)(?:-(\d+))?/gi;
-
-  // Pattern 2: "Book Chapter verse Verse" (spoken format)
-  // e.g., "John chapter 3 verse 16", "Genesis chapter 1 verse 3", "First Corinthians 13 4"
-  const pattern2 = /\b((?:first|second|third|[123]\s)?\s*[\w]+(?:\s+\w+)?)\s+(?:chapter\s+)?(\d+)\s+(?:verse\s+)?(\d+)(?:\s+(?:to|through|-)\s+(\d+))?/gi;
-
-  // Pattern 3: "Book Chapter colon Verse" (less common spoken)
-  // Already covered by pattern1
-
-  let match;
-  const found = new Set();
-
-  // Check pattern1
-  while ((match = pattern1.exec(text)) !== null) {
-    const [full, bookWord, chapter, verse, endVerse] = match;
-    const resolved = resolveBook(bookWord.trim());
-    if (resolved) {
-      const ref = formatRef(resolved, chapter, verse, endVerse);
-      if (!found.has(ref)) {
-        found.add(ref);
-        const confidence = scoreDetection(full, resolved, true);
-        detections.push({ ref, book:resolved, chapter, verse, endVerse, confidence, context:full.trim() });
-      }
-    }
-  }
-
-  // Check pattern2 (only if not already found by pattern1)
-  pattern2.lastIndex = 0;
-  while ((match = pattern2.exec(text)) !== null) {
-    const [full, bookWord, chapter, verse, endVerse] = match;
-    const resolved = resolveBook(bookWord.trim());
-    if (resolved) {
-      const ref = formatRef(resolved, chapter, verse, endVerse);
-      if (!found.has(ref)) {
-        found.add(ref);
-        const confidence = scoreDetection(full, resolved, false);
-        detections.push({ ref, book:resolved, chapter, verse, endVerse, confidence, context:full.trim() });
-      }
-    }
-  }
-
-  return detections;
-}
-
-function resolveBook(input) {
-  const lower = input.toLowerCase().trim();
-
-  // Handle spoken "First/Second/Third" → "1/2/3"
-  const spokenPrefix = lower.match(/^(first|second|third)\s+(.*)/);
-  if (spokenPrefix) {
-    const num = { first:'1', second:'2', third:'3' }[spokenPrefix[1]];
-    const rest = spokenPrefix[2];
-    // Try "1 Book" format
-    for (const book of BIBLE_BOOKS) {
-      for (const alias of book.aliases) {
-        if (rest === alias || (alias.length > 2 && rest.startsWith(alias))) {
-          // Verify this is a numbered book
-          if (book.name.startsWith(num + ' ')) return book.name;
-        }
-      }
-    }
-  }
-
-  // Exact name match
-  for (const book of BIBLE_BOOKS) {
-    if (lower === book.name.toLowerCase()) return book.name;
-  }
-  // Alias match
-  for (const book of BIBLE_BOOKS) {
-    for (const alias of book.aliases) {
-      if (lower === alias) return book.name;
-    }
-  }
-  // Partial match (starts with)
-  for (const book of BIBLE_BOOKS) {
-    for (const alias of book.aliases) {
-      if (lower === alias || (alias.length > 3 && lower.startsWith(alias))) return book.name;
-    }
-  }
-  return null;
-}
-
-function formatRef(book, chapter, verse, endVerse) {
-  return `${book} ${chapter}:${verse}${endVerse ? '-' + endVerse : ''}`;
-}
-
-function scoreDetection(rawText, book, hasColon) {
-  let score = 50; // base
-  // Colon format (explicit) = higher confidence
-  if (hasColon) score += 20;
-  // Longer book name = more specific = higher
-  if (book.length > 5) score += 10;
-  // Word "chapter" or "verse" present = explicit
-  if (/chapter|verse/i.test(rawText)) score += 15;
-  // Random noise check — single letter books like "J" are likely false positives
-  if (/^\w\s+\d/.test(rawText) && book.length < 4) score -= 20;
-  // Clamp
-  return Math.max(30, Math.min(98, score));
-}
-
-function isCommand(lower, detections) {
-  // Check if the transcript is a voice command rather than sermon content
-  if (/next (?:slide )?please|next slide|go next|advance/i.test(lower)) return true;
-  if (/previous|go back|last slide/i.test(lower)) return true;
-  if (/blank|black screen|clear/i.test(lower)) return true;
-  if (/first slide|go to start|beginning/i.test(lower)) return true;
-  if (/last slide|go to end|final slide/i.test(lower)) return true;
-  if (/(?:bring up|show|display|pull up|go to)\s+[\w\s]+\d+:\d+/i.test(lower)) return true;
-  if (/countdown|timer/i.test(lower)) return true;
-  if (/announcement/i.test(lower)) return true;
-  return false;
-}
-
-function addToDetectionQueue(detection) {
-  // Dedupe — don't add same ref within 30 seconds
-  const now = Date.now();
-  const key = detection.ref;
-  if (App.recentDetections.has(key)) return;
-  App.recentDetections.add(key);
-  setTimeout(() => App.recentDetections.delete(key), 30000);
-
-  const item = {
-    id: 'det-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
-    ref: detection.ref,
-    confidence: detection.confidence,
-    context: detection.context,
-    timestamp: now,
-    verseText: null,
-    loading: false,
-  };
-  App.detectionQueue.unshift(item);
-  if (App.detectionQueue.length > 20) App.detectionQueue.pop();
-
-  renderDetectionQueue();
-
-  // Auto-fetch verse text
-  fetchDetectionVerse(item);
-
-  // Auto-display if enabled
-  if (App.autoDisplay && detection.confidence >= 60) {
-    setTimeout(() => sendDetectionToLive(item.id), 1500);
-  }
-}
-
-async function fetchDetectionVerse(item) {
-  item.loading = true;
-  try {
-    const ref = item.ref.replace(/\s+/g, '+');
-    const version = App.settings.bibleVersion || 'KJV';
-    const cacheKey = `${ref}-${version}`;
-    if (App.bibleCache[cacheKey]) {
-      item.verseText = App.bibleCache[cacheKey];
-    } else {
-      const resp = await fetch(`https://bible-api.com/${ref}?translation=${version}`);
-      const data = await resp.json();
-      if (data.text) {
-        item.verseText = data.text.trim();
-        App.bibleCache[cacheKey] = item.verseText;
-      }
-    }
-  } catch(e) { /* silent fail */ }
-  item.loading = false;
-  renderDetectionQueue();
-}
-
-function renderDetectionQueue() {
-  const list = document.getElementById('detectionList');
-  const empty = document.getElementById('detectionEmpty');
-  const countEl = document.getElementById('detectionCount');
-
-  if (App.detectionQueue.length === 0) {
-    list.innerHTML = '<div class="detection-empty">No scriptures detected yet.<br>Start speaking to see AI detection in action.</div>';
-    countEl.textContent = '0 detected';
-    return;
-  }
-
-  countEl.textContent = `${App.detectionQueue.length} detected`;
-
-  list.innerHTML = App.detectionQueue.map(item => {
-    const confClass = item.confidence >= 75 ? 'high' : item.confidence >= 55 ? 'med' : 'low';
-    const confLabel = item.confidence >= 75 ? 'High' : item.confidence >= 55 ? 'Medium' : 'Low';
-    const versePreview = item.verseText ? `<div class="det-preview-text">${esc(item.verseText.substring(0, 100))}${item.verseText.length > 100 ? '...' : ''}</div>` : '';
-
-    return `
-      <div class="detection-item ${confClass}">
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;">
-            <span class="det-ref">📖 ${esc(item.ref)}</span>
-            <span class="det-confidence ${confClass}">${item.confidence}%</span>
-          </div>
-          ${versePreview}
-        </div>
-        <div class="det-actions">
-          <button class="det-btn preview" title="Preview" onclick="previewDetection('${item.id}')">👁</button>
-          <button class="det-btn send" title="Send to Live" onclick="sendDetectionToLive('${item.id}')">▶</button>
-          <button class="det-btn dismiss" title="Dismiss" onclick="dismissDetection('${item.id}')">✕</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function previewDetection(id) {
-  const item = App.detectionQueue.find(d => d.id === id);
-  if (!item) return;
-  if (item.verseText) {
-    const deck = getDeck();
-    if (!deck) return;
-    const slide = { type:'verse', bg:'black', verseRef:item.ref, verseText:item.verseText };
-    deck.slides.push(slide);
-    App.currentSlideIdx = deck.slides.length - 1;
-    save(); renderAll();
-    flashStatus(`👁 Previewing ${item.ref}`);
-  } else {
-    flashStatus('⏳ Loading verse...');
-  }
-}
-
-function sendDetectionToLive(id) {
-  const item = App.detectionQueue.find(d => d.id === id);
-  if (!item) return;
-  if (item.verseText) {
-    const deck = getDeck();
-    if (!deck) return;
-    const slide = { type:'verse', bg:'black', verseRef:item.ref, verseText:item.verseText };
-    deck.slides.push(slide);
-    App.currentSlideIdx = deck.slides.length - 1;
-    save(); renderAll();
-    // Remove from queue
-    App.detectionQueue = App.detectionQueue.filter(d => d.id !== id);
-    renderDetectionQueue();
-    flashStatus(`✅ ${item.ref} sent to live`);
-  } else {
-    flashStatus('⏳ Still loading verse text...');
-    setTimeout(() => sendDetectionToLive(id), 2000);
-  }
-}
-
-function dismissDetection(id) {
-  App.detectionQueue = App.detectionQueue.filter(d => d.id !== id);
-  renderDetectionQueue();
-}
-
-function clearDetectionQueue() {
-  App.detectionQueue = [];
-  renderDetectionQueue();
-}
-
-function toggleAutoDisplay() {
-  App.autoDisplay = !App.autoDisplay;
-  document.getElementById('autoDisplayToggle').classList.toggle('on', App.autoDisplay);
-  flashStatus(App.autoDisplay ? '✅ Auto-display ON — verses show automatically' : 'Auto-display OFF');
-}
-
-function showTranscript(text) {
-  const overlay = document.getElementById('transcriptOverlay');
-  // Highlight any detected verse references in the transcript
-  let display = esc(text);
-  const verseRegex = /\b((?:\d\s)?[\w]+(?:\s\w+)?\s+\d+:\d+(?:-\d+)?)/g;
-  display = display.replace(verseRegex, '<span class="highlight">$1</span>');
-  overlay.innerHTML = display;
-  overlay.classList.add('show');
-  clearTimeout(overlay._timeout);
-  overlay._timeout = setTimeout(() => overlay.classList.remove('show'), 8000);
-}
-
-// ============================================================
-// SERMON PREPARATION TOOL
-// ============================================================
-
-function openSermonPrep() {
-  const modal = document.getElementById('modalContent');
-  modal.innerHTML = `
-    <div>
-      <h2>📖 Sermon Preparation Tool</h2>
-      <p style="color:var(--text2);margin-bottom:16px;font-size:13px;">AI-powered sermon prep — generate outlines, find scriptures, build your message, then export straight to a slide deck.</p>
-
-      <div id="sermonSteps" style="display:flex;gap:4px;margin-bottom:20px;">
-        <div class="sermon-step active" data-step="1">1. Topic</div>
-        <div class="sermon-step" data-step="2">2. Outline</div>
-        <div class="sermon-step" data-step="3">3. Scriptures</div>
-        <div class="sermon-step" data-step="4">4. Export</div>
-      </div>
-
-      <div id="sermonStep1" class="sermon-step-content">
-        <div class="editor-field">
-          <label>Sermon Topic or Theme</label>
-          <input type="text" id="sermonTopic" placeholder="e.g., God's grace in difficult times, The power of prayer, Walking by faith not sight" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
-        </div>
-        <div class="editor-field">
-          <label>Additional Context (optional)</label>
-          <textarea id="sermonContext" placeholder="Target audience, key message, desired length, specific angle..." style="width:100%;min-height:80px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;"></textarea>
-        </div>
-        <div class="editor-field">
-          <label>Style</label>
-          <select id="sermonStyle" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-            <option value="expository">Expository (verse-by verse)</option>
-            <option value="topical">Topical (theme-based)</option>
-            <option value="textual">Textual ( anchored in a key verse)</option>
-            <option value="narrative">Narrative (story-driven)</option>
-          </select>
-        </div>
-        <div class="editor-field">
-          <label>AI Provider</label>
-          <select id="sermonProvider" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-            <option value="openai" ${App.settings.aiProvider==='openai'?'selected':''}>OpenAI (GPT-4o)</option>
-            <option value="anthropic" ${App.settings.aiProvider==='anthropic'?'selected':''}>Anthropic (Claude)</option>
-            <option value="custom" ${App.settings.aiProvider==='custom'?'selected':''}>Custom (OpenAI-compatible)</option>
-          </select>
-        </div>
-        <div class="editor-field">
-          <label>API Key</label>
-          <input type="password" id="sermonKey" value="${esc(App.settings.aiApiKey||'')}" placeholder="sk-..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-        </div>
-        <div id="sermonUrlWrap" class="editor-field" style="display:none;">
-          <label>Custom API URL</label>
-          <input type="text" id="sermonUrl" placeholder="https://api.example.com/v1/chat/completions" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-        </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="generateSermonOutline()">🤖 Generate Sermon Outline</button>
-      </div>
-
-      <div id="sermonStep2" class="sermon-step-content" style="display:none;">
-        <div id="sermonOutlineResult"></div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
-          <button class="btn btn-secondary" onclick="sermonGoStep(1)">← Back</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="generateSermonScriptures()">📖 Find Scriptures</button>
-        </div>
-      </div>
-
-      <div id="sermonStep3" class="sermon-step-content" style="display:none;">
-        <div id="sermonScriptureResult"></div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
-          <button class="btn btn-secondary" onclick="sermonGoStep(2)">← Back</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="finalizeSermon()">✅ Build Slide Deck</button>
-        </div>
-      </div>
-
-      <div id="sermonStep4" class="sermon-step-content" style="display:none;">
-        <div id="sermonExportResult"></div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-      </div>
-    </div>
-    <style>
-      .sermon-step { flex:1; padding:8px; text-align:center; font-size:12px; font-weight:600; border-radius:8px; background:var(--bg3); color:var(--text3); }
-      .sermon-step.active { background:var(--accent); color:#fff; }
-      .sermon-step.done { background:var(--success); color:#fff; }
-      .sermon-outline-point { padding:12px; background:var(--bg3); border-radius:8px; margin-bottom:8px; border-left:3px solid var(--accent); }
-      .sermon-outline-point h4 { font-size:14px; margin-bottom:4px; }
-      .sermon-outline-point p { font-size:13px; color:var(--text2); }
-      .sermon-scripture-card { padding:12px; background:var(--bg3); border-radius:8px; margin-bottom:8px; border-left:3px solid var(--accent3); }
-      .sermon-scripture-card .ref { font-weight:700; font-size:14px; margin-bottom:4px; }
-      .sermon-scripture-card .text { font-size:13px; color:var(--text2); font-style:italic; }
-      .sermon-scripture-card .usage { font-size:11px; color:var(--accent3); margin-top:4px; }
-      .sermon-loading { text-align:center; padding:40px 20px; color:var(--text2); }
-      .sermon-loading .spinner { font-size:32px; animation:spin 2s linear infinite; display:block; margin-bottom:12px; }
-      @keyframes spin { 100% { transform:rotate(360deg); } }
-    </style>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-
-  // Show/hide custom URL field
-  document.getElementById('sermonProvider').onchange = function() {
-    document.getElementById('sermonUrlWrap').style.display = this.value === 'custom' ? 'block' : 'none';
-  };
-
-  // Store sermon working data
-  App.sermonData = { topic:'', context:'', style:'', outline:null, scriptures:[] };
-}
-
-function sermonGoStep(step) {
-  for (let i = 1; i <= 4; i++) {
-    document.getElementById('sermonStep' + i).style.display = i === step ? 'block' : 'none';
-  }
-  document.querySelectorAll('.sermon-step').forEach(el => {
-    const s = parseInt(el.dataset.step);
-    el.classList.remove('active', 'done');
-    if (s < step) el.classList.add('done');
-    else if (s === step) el.classList.add('active');
-  });
-}
-
-async function generateSermonOutline() {
-  const topic = document.getElementById('sermonTopic').value.trim();
-  const context = document.getElementById('sermonContext').value.trim();
-  const style = document.getElementById('sermonStyle').value;
-  const provider = document.getElementById('sermonProvider').value;
-  const key = document.getElementById('sermonKey').value.trim();
-  let url = provider === 'custom' ? document.getElementById('sermonUrl').value.trim() : '';
-
-  if (!topic) { alert('Enter a sermon topic'); return; }
-  if (!key) { alert('Enter your API key'); return; }
-
-  // Save settings
-  App.settings.aiProvider = provider;
-  App.settings.aiApiKey = key;
-  save();
-  App.sermonData = { topic, context, style, outline:null, scriptures:[] };
-
-  document.getElementById('sermonStep1').innerHTML = '<div class="sermon-loading"><span class="spinner">📖</span>Generating sermon outline...</div>';
-
-  const prompt = `Create a ${style} sermon on the topic: "${topic}"${context ? '. Additional context: ' + context : ''}.
-
-Structure as JSON with:
-{
-  "title": "Sermon title",
-  "theme": "One sentence theme",
-  "introduction": "Opening hook and context (2-3 sentences)",
-  "main_points": [
-    {"title": "Point title", "description": "What this point covers (2-3 sentences)"}
-  ],
-  "conclusion": "Closing summary and call to action (2-3 sentences)",
-  "suggested_scriptures": ["Reference 1", "Reference 2", "Reference 3-5"]
-}
-
-Provide 3-4 main points. Respond with ONLY the JSON, no markdown.`;
-
-  try {
-    let result;
-    if (provider === 'openai' || provider === 'custom') {
-      const apiUrl = url || 'https://api.openai.com/v1/chat/completions';
-      result = await callOpenAICompatible(apiUrl, key, prompt, 'You are a sermon preparation assistant. Respond only with valid JSON.', provider === 'openai' ? 'gpt-4o' : undefined);
-    } else if (provider === 'anthropic') {
-      result = await callAnthropic(key, prompt, 'You are a sermon preparation assistant. Respond only with valid JSON.');
-    }
-
-    const jsonMatch = result.match(/\{[\s\S]*\}/);
-    const outline = JSON.parse(jsonMatch[0]);
-    App.sermonData.outline = outline;
-
-    // Render outline
-    const html = `
-      <h3 style="font-size:18px;margin-bottom:4px;">${esc(outline.title)}</h3>
-      <p style="color:var(--accent3);font-style:italic;margin-bottom:16px;font-size:13px;">${esc(outline.theme)}</p>
-
-      <div class="sermon-outline-point" style="border-left-color:var(--accent3);">
-        <h4>📖 Introduction</h4>
-        <p>${esc(outline.introduction)}</p>
-      </div>
-
-      ${outline.main_points.map((p, i) => `
-        <div class="sermon-outline-point">
-          <h4>${i+1}. ${esc(p.title)}</h4>
-          <p>${esc(p.description)}</p>
-        </div>
-      `).join('')}
-
-      <div class="sermon-outline-point" style="border-left-color:var(--success);">
-        <h4>✅ Conclusion</h4>
-        <p>${esc(outline.conclusion)}</p>
-      </div>
-
-      ${outline.suggested_scriptures?.length ? `
-        <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;">
-          <strong style="font-size:13px;">📚 Suggested Scriptures:</strong>
-          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
-            ${outline.suggested_scriptures.map(s => `<span style="padding:4px 10px;background:var(--bg3);border-radius:12px;font-size:12px;">${esc(s)}</span>`).join('')}
-          </div>
-        </div>
-      ` : ''}
-    `;
-
-    document.getElementById('sermonStep1').style.display = 'none';
-    document.getElementById('sermonStep2').innerHTML = html + `
-      <div style="display:flex;gap:8px;margin-top:16px;">
-        <button class="btn btn-secondary" onclick="sermonGoStep(1)">← Edit Topic</button>
-        <button class="btn btn-primary" style="flex:1;" onclick="generateSermonScriptures()">📖 Find Full Scriptures →</button>
-      </div>
-    `;
-    sermonGoStep(2);
-  } catch(e) {
-    document.getElementById('sermonStep1').innerHTML = `<div style="padding:20px;color:var(--danger);">❌ Failed: ${esc(e.message)}</div>`;
-  }
-}
-
-async function generateSermonScriptures() {
-  if (!App.sermonData.outline) return;
-  const scriptures = App.sermonData.outline.suggested_scriptures || [];
-  if (scriptures.length === 0) {
-    sermonGoStep(3);
-    document.getElementById('sermonStep3').innerHTML = '<p style="color:var(--text2);">No suggested scriptures to fetch. You can proceed to build the deck.</p><div style="margin-top:16px;"><button class="btn btn-primary" onclick="finalizeSermon()">✅ Build Slide Deck →</button></div>';
-    return;
-  }
-
-  document.getElementById('sermonStep2').style.display = 'none';
-  document.getElementById('sermonStep3').innerHTML = '<div class="sermon-loading"><span class="spinner">📖</span>Fetching scripture texts...</div>';
-  sermonGoStep(3);
-
-  const version = App.settings.bibleVersion || 'KJV';
-  const fetched = [];
-
-  for (const ref of scriptures) {
-    try {
-      const refEncoded = ref.trim().replace(/\s+/g, '+');
-      const cacheKey = `${refEncoded}-${version}`;
-      let text;
-      if (App.bibleCache[cacheKey]) {
-        text = App.bibleCache[cacheKey];
-      } else {
-        const resp = await fetch(`https://bible-api.com/${refEncoded}?translation=${version}`);
-        const data = await resp.json();
-        text = data.text?.trim();
-        if (text) App.bibleCache[cacheKey] = text;
-      }
-      if (text) {
-        fetched.push({ ref: ref.trim(), text, usage: getScriptureUsage(ref, App.sermonData.outline) });
-      }
-    } catch(e) { /* skip */ }
-  }
-
-  App.sermonData.scriptures = fetched;
-
-  const html = fetched.length > 0 ? fetched.map(s => `
-    <div class="sermon-scripture-card">
-      <div class="ref">📖 ${esc(s.ref)}</div>
-      <div class="text">"${esc(s.text)}"</div>
-      ${s.usage ? `<div class="usage">💡 ${esc(s.usage)}</div>` : ''}
-    </div>
-  `).join('') : '<p style="color:var(--text2);">Could not fetch scripture texts. Check your connection.</p>';
-
-  document.getElementById('sermonStep3').innerHTML = html + `
-    <div style="display:flex;gap:8px;margin-top:16px;">
-      <button class="btn btn-secondary" onclick="sermonGoStep(2)">← Back to Outline</button>
-      <button class="btn btn-primary" style="flex:1;" onclick="finalizeSermon()">✅ Build Slide Deck →</button>
-    </div>
-  `;
-}
-
-function getScriptureUsage(ref, outline) {
-  // Try to match scripture to a main point
-  if (!outline?.main_points) return '';
-  for (const point of outline.main_points) {
-    if (point.description && point.description.toLowerCase().includes(ref.toLowerCase().split(/\s/)[0].toLowerCase())) {
-      return `Pairs with: ${point.title}`;
-    }
-  }
-  return 'Supporting scripture';
-}
-
-function finalizeSermon() {
-  const data = App.sermonData;
-  if (!data.outline) return;
-
-  const slides = [];
-
-  // Title slide
-  slides.push({ type:'welcome', bg:'gradient', title:data.outline.title, subtitle:data.outline.theme || data.topic });
-
-  // Introduction
-  slides.push({ type:'announcement', bg:'bg-gradient', title:'Introduction', text:data.outline.introduction });
-
-  // Scripture verses
-  data.scriptures.forEach(s => {
-    slides.push({ type:'verse', bg:'black', verseRef:s.ref, verseText:s.text });
-  });
-
-  // Main points
-  data.outline.main_points.forEach((point, i) => {
-    slides.push({ type:'announcement', bg:'gradient', title:`Point ${i+1}: ${point.title}`, text:point.description });
-  });
-
-  // Conclusion
-  slides.push({ type:'announcement', bg:'nature', title:'Conclusion', text:data.outline.conclusion });
-
-  // Closing blank
-  slides.push({ type:'blank', bg:'black' });
-
-  // Create deck
-  const deck = {
-    id: 'deck-' + Date.now(),
-    title: data.outline.title || 'Sermon Deck',
-    created: Date.now(),
-    slides,
-  };
-
-  App.decks.push(deck);
-  App.currentDeckId = deck.id;
-  App.currentSlideIdx = 0;
-  save();
-  closeModal();
-  renderAll();
-  flashStatus(`✅ Sermon deck created with ${slides.length} slides!`);
-
-  // Show success step
-  sermonGoStep(4);
-}
-
-// ---------- COUNTDOWN TIMER ----------
-let countdownInterval = null;
-function startCountdown(seconds) {
-  if (countdownInterval) clearInterval(countdownInterval);
-  const el = document.getElementById('countdownEl');
-  if (!el) return;
-  let remaining = seconds;
-  countdownInterval = setInterval(() => {
-    remaining--;
-    if (el) el.textContent = formatCountdown(remaining);
-    if (remaining <= 0) {
-      clearInterval(countdownInterval);
-      if (el) el.textContent = '00:00';
-    }
-  }, 1000);
-}
-
-function formatCountdown(seconds) {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
-}
-
-// ---------- PRESENT MODE ----------
-function present() {
-  const frame = document.getElementById('previewArea');
-  if (frame.requestFullscreen) {
-    frame.requestFullscreen();
-  } else if (frame.webkitRequestFullscreen) {
-    frame.webkitRequestFullscreen();
-  }
-  App.isPresenting = true;
-  flashStatus('🖥️ Presentation mode — ESC to exit');
-}
-
-// ---------- STATUS FLASH ----------
-let statusTimeout = null;
-function flashStatus(msg) {
-  const el = document.getElementById('statusText');
-  el.textContent = msg;
-  if (statusTimeout) clearTimeout(statusTimeout);
-  statusTimeout = setTimeout(() => {
-    el.textContent = 'Ready';
-  }, 3000);
-}
-
-// ---------- AI BUILDER ----------
-function openAIBuilder() {
-  const modal = document.getElementById('modalContent');
-  modal.innerHTML = `
-    <div class="ai-builder">
-      <h2>🤖 Build a Deck with AI</h2>
-      <p style="color:var(--text2);margin-bottom:12px;font-size:13px;">Describe your service and AI will generate a complete slide deck.</p>
-      <textarea id="aiPrompt" placeholder="Example: Sunday morning service with 3 worship songs (Amazing Grace, How Great Thou Art, 10,000 Reasons), announcements for youth group Friday 7pm, sermon on John 3 about being born again, closing with communion"></textarea>
-      <div class="ai-presets">
-        <span class="ai-preset" onclick="setAIPreset('Sunday morning worship service with 3 songs, announcements, and a sermon on faith')">Sunday Service</span>
-        <span class="ai-preset" onclick="setAIPreset('Wednesday Bible study on Romans 8 with discussion questions')">Bible Study</span>
-        <span class="ai-preset" onclick="setAIPreset('Youth group night with games, worship, and a message on courage')">Youth Night</span>
-        <span class="ai-preset" onclick="setAIPreset('Christmas Eve candlelight service with carols and nativity reading')">Christmas Eve</span>
-      </div>
-      <div style="margin-top:16px;">
-        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">AI Provider</label>
-        <select id="aiProvider" onchange="updateAIProviderUI()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-          <option value="openai">OpenAI (GPT-4o)</option>
-          <option value="anthropic">Anthropic (Claude)</option>
-          <option value="custom">Custom (OpenAI-compatible)</option>
-        </select>
-      </div>
-      <div id="aiKeyField" style="margin-top:12px;">
-        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">API Key</label>
-        <input type="password" id="aiKeyInput" value="${esc(App.settings.aiApiKey)}" placeholder="sk-..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-      </div>
-      <div id="aiUrlField" style="margin-top:12px;display:none;">
-        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">API URL</label>
-        <input type="text" id="aiUrlInput" placeholder="https://api.example.com/v1/chat/completions" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="generateDeck()">🚀 Generate Deck</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-  document.getElementById('aiProvider').value = App.settings.aiProvider || 'openai';
-  updateAIProviderUI();
-}
-
-function setAIPreset(text) {
-  document.getElementById('aiPrompt').value = text;
-}
-
-function updateAIProviderUI() {
-  const provider = document.getElementById('aiProvider').value;
-  document.getElementById('aiUrlField').style.display = provider === 'custom' ? 'block' : 'none';
-}
-
-async function generateDeck() {
-  const prompt = document.getElementById('aiPrompt').value.trim();
-  const provider = document.getElementById('aiProvider').value;
-  const key = document.getElementById('aiKeyInput').value.trim();
-  let url = provider === 'custom' ? document.getElementById('aiUrlInput').value.trim() : '';
-
-  if (!prompt) { alert('Enter a description'); return; }
-  if (!key) { alert('Enter your API key'); return; }
-
-  // Save settings
-  App.settings.aiProvider = provider;
-  App.settings.aiApiKey = key;
-  save();
-
-  document.querySelector('#modalContent .btn-primary').textContent = '⏳ Generating...';
-  document.querySelector('#modalContent .btn-primary').disabled = true;
-
-  const systemPrompt = `You are a church presentation deck generator. Create a JSON array of slides for a church service. Each slide has: type (welcome, worship, verse, announcement, blank, countdown, notification), bg (black, white, gradient, worship, nature), and type-specific fields.
-
-Slide types and their fields:
-- welcome: title, subtitle
-- worship: title (song name), lyrics (text with \\n for line breaks)
-- verse: verseRef (e.g. "John 3:16"), verseText
-- announcement: title, text (\\n for lines)
-- blank: (no fields)
-- countdown: seconds (integer)
-- notification: text
-
-Respond with ONLY a JSON array of slide objects. No markdown, no explanation. Example:
-[{"type":"welcome","bg":"gradient","title":"Welcome","subtitle":"We're glad you're here"},{"type":"worship","bg":"worship","title":"Amazing Grace","lyrics":"Amazing grace, how sweet the sound\\nThat saved a wretch like me"}]`;
-
-  try {
-    let apiResult;
-    if (provider === 'openai' || provider === 'custom') {
-      const apiUrl = url || 'https://api.openai.com/v1/chat/completions';
-      apiResult = await callOpenAICompatible(apiUrl, key, prompt, systemPrompt, provider === 'openai' ? 'gpt-4o' : undefined);
-    } else if (provider === 'anthropic') {
-      apiResult = await callAnthropic(key, prompt, systemPrompt);
-    }
-
-    let slides;
-    // Try to extract JSON from response
-    const jsonMatch = apiResult.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      slides = JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error('Could not parse AI response as JSON');
-    }
-
-    // Create deck from AI output
-    const deck = {
-      id: 'deck-' + Date.now(),
-      title: prompt.substring(0, 40) + (prompt.length > 40 ? '...' : ''),
-      created: Date.now(),
-      slides: slides,
-    };
-
-    // Fetch any Bible verses that don't have text
-    for (const slide of deck.slides) {
-      if (slide.type === 'verse' && slide.verseRef && !slide.verseText) {
-        try {
-          const ref = slide.verseRef.replace(/\s+/g, '+');
-          const resp = await fetch(`https://bible-api.com/${ref}?translation=${App.settings.bibleVersion}`);
-          const data = await resp.json();
-          if (data.text) slide.verseText = data.text.trim();
-        } catch(e) { /* skip failed verse */ }
-      }
-    }
-
-    App.decks.push(deck);
-    App.currentDeckId = deck.id;
-    App.currentSlideIdx = 0;
-    save();
-    closeModal();
-    renderAll();
-    flashStatus(`✅ Deck generated with ${deck.slides.length} slides!`);
-  } catch(e) {
-    alert('AI generation failed: ' + e.message);
-    document.querySelector('#modalContent .btn-primary').textContent = '🚀 Generate Deck';
-    document.querySelector('#modalContent .btn-primary').disabled = false;
-  }
-}
-
-async function callOpenAICompatible(url, key, prompt, systemPrompt, model) {
-  const body = {
-    messages: [
-      { role:'system', content:systemPrompt },
-      { role:'user', content:prompt },
-    ],
-    temperature: 0.7,
-  };
-  if (model) body.model = model;
-  const resp = await fetch(url, {
-    method:'POST',
-    headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${key}` },
-    body: JSON.stringify(body),
-  });
-  if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
-  const data = await resp.json();
-  return data.choices[0].message.content;
-}
-
-async function callAnthropic(key, prompt, systemPrompt) {
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers: {
-      'Content-Type':'application/json',
-      'x-api-key':key,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true',
-    },
-    body: JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:4096,
-      system:systemPrompt,
-      messages: [{ role:'user', content:prompt }],
-    }),
-  });
-  if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
-  const data = await resp.json();
-  return data.content[0].text;
-}
-
-// ---------- SETTINGS ----------
-function openSettings() {
-  const modal = document.getElementById('modalContent');
-  modal.innerHTML = `
-    <h2>⚙️ Settings</h2>
-    <div class="settings-row">
-      <div><strong>Bible Version</strong><div style="font-size:12px;color:var(--text2);">Used for verse lookups</div></div>
-      <select id="setBibleVer" style="padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);">
-        <option value="KJV" ${App.settings.bibleVersion==='KJV'?'selected':''}>KJV</option>
-        <option value="ESV" ${App.settings.bibleVersion==='ESV'?'selected':''}>ESV</option>
-        <option value="NIV" ${App.settings.bibleVersion==='NIV'?'selected':''}>NIV</option>
-        <option value="WEB" ${App.settings.bibleVersion==='WEB'?'selected':''}>WEB</option>
-        <option value="NASB" ${App.settings.bibleVersion==='NASB'?'selected':''}>NASB</option>
-      </select>
-    </div>
-    <div class="settings-row">
-      <div><strong>Voice Commands</strong><div style="font-size:12px;color:var(--text2);">Listen to mic for slide commands</div></div>
-      <div class="toggle ${App.settings.voiceCommands?'on':''}" id="toggleVoice" onclick="App.settings.voiceCommands=!App.settings.voiceCommands;this.classList.toggle('on');save()"></div>
-    </div>
-    <div class="settings-row">
-      <div><strong>Auto-Advance</strong><div style="font-size:12px;color:var(--text2);">AI follows audio and advances automatically</div></div>
-      <div class="toggle ${App.settings.autoAdvance?'on':''}" id="toggleAuto" onclick="App.settings.autoAdvance=!App.settings.autoAdvance;this.classList.toggle('on');save()"></div>
-    </div>
-    <div class="settings-row">
-      <div><strong>Export Data</strong><div style="font-size:12px;color:var(--text2);">Download all decks as JSON</div></div>
-      <button class="btn btn-sm btn-secondary" onclick="exportData()">Export</button>
-    </div>
-    <div class="settings-row">
-      <div><strong>Import Data</strong><div style="font-size:12px;color:var(--text2);">Upload a JSON backup</div></div>
-      <button class="btn btn-sm btn-secondary" onclick="document.getElementById('importFile').click()">Import</button>
-      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-    </div>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-
-  document.getElementById('setBibleVer').onchange = function() {
-    App.settings.bibleVersion = this.value;
-    save();
-  };
-}
-
-function exportData() {
-  const blob = new Blob([JSON.stringify({decks:App.decks, settings:App.settings}, null, 2)], { type:'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'crosspresenter-backup.json';
-  a.click();
-}
-
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (data.decks) App.decks = data.decks;
-      if (data.settings) Object.assign(App.settings, data.settings);
-      save();
-      renderAll();
-      closeModal();
-    } catch(e) { alert('Invalid file'); }
-  };
-  reader.readAsText(file);
-}
-
-// ---------- MODAL ----------
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('show');
-}
-
-// ---------- KEYBOARD ----------
-document.addEventListener('keydown', (e) => {
-  // Don't intercept if typing in input
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-  if (document.getElementById('modalOverlay').classList.contains('show')) {
-    if (e.key === 'Escape') closeModal();
-    return;
-  }
-
-  switch(e.key) {
-    case 'ArrowRight': case ' ': case 'PageDown':
-      e.preventDefault(); nextSlide(); break;
-    case 'ArrowLeft': case 'PageUp':
-      e.preventDefault(); prevSlide(); break;
-    case 'Home': goToSlide(0); break;
-    case 'End': const d=getDeck(); if(d) goToSlide(d.slides.length-1); break;
-    case 'Escape':
-      if (App.isPresenting) { App.isPresenting = false; }
-      if (document.fullscreenElement) document.exitFullscreen();
-      break;
-    case 'f': case 'F':
-      present(); break;
-    case 'b': case 'B':
-      addBlankSlide(); break;
-  }
-});
-
-// ---------- UTIL ----------
-function esc(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ---------- RENDER ALL ----------
-function renderAll() {
-  renderDeckList();
-  renderCurrentSlide();
-  renderThumbs();
-}
-
-// ---------- INIT ----------
-load();
-renderAll();
-
-// Service worker registration
+// Service worker for offline
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
-
-// Handle countdown when slide changes
-const observer = new MutationObserver(() => {
-  const cd = document.getElementById('countdownEl');
-  if (cd) {
-    const deck = getDeck();
-    if (deck) {
-      const slide = deck.slides[App.currentSlideIdx];
-      if (slide && slide.type === 'countdown') startCountdown(slide.seconds);
-    }
-  }
-});
-observer.observe(document.getElementById('slideCanvas'), { childList:true, subtree:true });
 </script>
 </body>
 </html>

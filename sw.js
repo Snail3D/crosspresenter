@@ -1,7 +1,8 @@
-const CACHE = 'crosspresenter-v2';
+const CACHE = 'crosspresenter-v3';
 const ASSETS = [
   './',
   './index.html',
+  './app.html',
   './manifest.json',
 ];
 
