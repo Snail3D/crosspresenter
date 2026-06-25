@@ -2,197 +2,167 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Luther's Code — Church Technology That Steps Back</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#08080c">
+<meta name="theme-color" content="#06060a">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-* { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --bg:#06060a;
-  --bg2:#0c0c12;
-  --bg3:#12121a;
-  --bg4:#181822;
-  --text:#f0f0f5;
-  --text2:#8a8a9a;
-  --text3:#50505a;
-  --line:rgba(255,255,255,.06);
-  --line2:rgba(255,255,255,.1);
-  --gold:#c9a96e;
-  --gold-dim:rgba(201,169,110,.15);
-  --blue:#3b7ea1;
-  --blue-dim:rgba(59,126,161,.15);
-  --red:#a83232;
-  --red-dim:rgba(168,50,50,.12);
-  --white-rose:#e8e8f0;
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060a;--bg2:#0c0c12;--bg3:#14141e;--bg4:#1c1c28;
+  --text:#f0f0f5;--text2:#8a8a9a;--text3:#50505a;
+  --line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);
+  --gold:#c9a96e;--gold2:#d4b87e;--gold-dim:rgba(201,169,110,.12);
+  --blue:#3b7ea1;--blue-dim:rgba(59,126,161,.1);
+  --red:#a83232;--red-dim:rgba(168,50,50,.08);
 }
-html { scroll-behavior:smooth; }
-body { background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:16px; line-height:1.6; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
-a { color:inherit; text-decoration:none; }
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img,svg{display:block;max-width:100%}
 
-/* ===== ANIMATED BACKGROUND ===== */
-.bg-canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:.5; }
-.bg-grid { position:fixed; inset:0; z-index:0; pointer-events:none; background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px); background-size:60px 60px; mask-image:radial-gradient(ellipse 80% 50% at 50% 0%,#000 40%,transparent 100%); -webkit-mask-image:radial-gradient(ellipse 80% 50% at 50% 0%,#000 40%,transparent 100%); }
-.bg-glow { position:fixed; z-index:0; pointer-events:none; border-radius:50%; filter:blur(100px); opacity:.15; }
-.bg-glow-1 { top:-10%; left:20%; width:500px; height:500px; background:var(--gold); animation:float1 20s ease-in-out infinite; }
-.bg-glow-2 { top:40%; right:10%; width:400px; height:400px; background:var(--blue); animation:float2 25s ease-in-out infinite; }
-.bg-glow-3 { bottom:10%; left:30%; width:300px; height:300px; background:var(--red); opacity:.08; animation:float3 30s ease-in-out infinite; }
-@keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,30px)} }
-@keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,-40px)} }
-@keyframes float3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-30px)} }
+/* BG */
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 80%)}
+.bg-glow{position:fixed;z-index:0;pointer-events:none;border-radius:50%;filter:blur(120px)}
+.bg-g1{top:-15%;left:15%;width:500px;height:500px;background:var(--gold);opacity:.07;animation:drift1 20s ease-in-out infinite}
+.bg-g2{top:35%;right:5%;width:400px;height:400px;background:var(--blue);opacity:.06;animation:drift2 25s ease-in-out infinite}
+.bg-g3{bottom:5%;left:25%;width:350px;height:350px;background:var(--red);opacity:.04;animation:drift3 30s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,40px)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,-50px)}}
+@keyframes drift3{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-40px)}}
 
-/* ===== NAV ===== */
-nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(6,6,10,.7); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid var(--line); transition:padding .3s; }
-nav.scrolled { padding:2px 0; background:rgba(6,6,10,.92); }
-.nav-inner { max-width:1100px; margin:0 auto; padding:16px 32px; display:flex; align-items:center; justify-content:space-between; }
-.brand { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:800; letter-spacing:-.02em; transition:opacity .2s; }
-.brand:hover { opacity:.8; }
-.brand-mark { width:30px; height:30px; transition:transform .4s; }
-.brand:hover .brand-mark { transform:rotate(180deg); }
-.nav-links { display:flex; gap:32px; align-items:center; }
-.nav-links a { color:var(--text2); font-size:14px; font-weight:500; transition:color .2s; position:relative; }
-.nav-links a:not(.nav-cta)::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1px; background:var(--gold); transition:width .3s; }
-.nav-links a:not(.nav-cta):hover { color:var(--text); }
-.nav-links a:not(.nav-cta):hover::after { width:100%; }
-.nav-cta { padding:9px 20px; background:var(--text); color:var(--bg) !important; border-radius:8px; font-weight:600; font-size:13px; transition:all .2s; }
-.nav-cta:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(255,255,255,.1); }
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(6,6,10,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);transition:all .3s}
+.nav-inner{max-width:1100px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;letter-spacing:-.02em}
+.brand svg{width:28px;height:28px;transition:transform .5s}
+.brand:hover svg{transform:rotate(90deg)}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{color:var(--text2);font-size:14px;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{padding:8px 18px;background:var(--text);color:var(--bg)!important;border-radius:8px;font-weight:600;font-size:13px;transition:all .2s}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,255,255,.08)}
+.nav-mobile-toggle{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer}
 
-/* ===== HERO ===== */
-.hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:140px 32px 80px; position:relative; z-index:1; }
-.hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 16px; border:1px solid var(--line2); border-radius:100px; font-size:12px; font-weight:500; color:var(--text2); margin-bottom:32px; backdrop-filter:blur(10px); animation:fadeInUp .8s ease both; }
-.hero-badge .dot { width:6px; height:6px; border-radius:50%; background:var(--gold); box-shadow:0 0 8px var(--gold); animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
-.hero h1 { font-size:clamp(2.2rem,6vw,4.5rem); font-weight:800; line-height:1.08; letter-spacing:-.03em; max-width:900px; margin-bottom:24px; animation:fadeInUp .8s ease .1s both; }
-.hero h1 em { font-style:normal; color:var(--gold); position:relative; }
-.hero h1 em::after { content:''; position:absolute; bottom:2px; left:0; right:0; height:2px; background:var(--gold-dim); }
-.hero p { font-size:clamp(1rem,2vw,1.2rem); color:var(--text2); max-width:540px; margin-bottom:40px; line-height:1.6; animation:fadeInUp .8s ease .2s both; }
-.hero-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; animation:fadeInUp .8s ease .3s both; }
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 20px 80px;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--line2);border-radius:100px;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:28px;backdrop-filter:blur(10px);animation:fadeUp .6s ease both}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:clamp(2rem,7vw,4.2rem);font-weight:800;line-height:1.08;letter-spacing:-.03em;max-width:880px;margin-bottom:22px;animation:fadeUp .6s ease .1s both}
+.hero h1 em{font-style:normal;color:var(--gold);position:relative}
+.hero h1 em::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--gold-dim)}
+.hero p{font-size:clamp(1rem,2.2vw,1.18rem);color:var(--text2);max-width:520px;margin-bottom:36px;animation:fadeUp .6s ease .2s both}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s ease .3s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
-@keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.btn{padding:13px 28px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .25s;font-family:inherit;text-decoration:none}
+.btn-solid{background:var(--text);color:var(--bg)}
+.btn-solid:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,255,255,.08)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line2)}
+.btn-ghost:hover{border-color:var(--text3);background:rgba(255,255,255,.03);transform:translateY(-2px)}
 
-.btn { padding:13px 28px; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all .25s; font-family:inherit; }
-.btn-solid { background:var(--text); color:var(--bg); }
-.btn-solid:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(255,255,255,.08); }
-.btn-ghost { background:transparent; color:var(--text); border:1px solid var(--line2); }
-.btn-ghost:hover { border-color:var(--text3); background:rgba(255,255,255,.03); transform:translateY(-2px); }
+/* SECTIONS */
+section{padding:100px 20px;position:relative;z-index:1}
+.container{max-width:1100px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);margin-bottom:14px}
+.stitle{font-size:clamp(1.5rem,4.5vw,2.6rem);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-bottom:14px}
+.sdesc{font-size:1rem;color:var(--text2);max-width:520px;margin-bottom:48px}
 
-/* ===== SECTIONS ===== */
-section { padding:120px 32px; position:relative; z-index:1; }
-.container { max-width:1100px; margin:0 auto; }
-.section-eyebrow { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.15em; color:var(--gold); margin-bottom:16px; }
-.section-title { font-size:clamp(1.6rem,4vw,2.8rem); font-weight:800; letter-spacing:-.02em; line-height:1.15; margin-bottom:16px; }
-.section-desc { font-size:1.05rem; color:var(--text2); max-width:540px; margin-bottom:56px; }
+/* PRODUCT */
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pcard{background:rgba(12,12,18,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:28px;transition:all .35s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.pcard::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 20%,var(--line2) 50%,transparent 80%);opacity:0;transition:opacity .35s}
+.pcard:hover{border-color:var(--line2);transform:translateY(-6px);box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.pcard:hover::before{opacity:1}
+.pcard.featured{border-color:var(--gold-dim)}
+.pstatus{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;display:flex;align-items:center;gap:6px}
+.pstatus.live{color:var(--gold)}
+.pstatus.live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px var(--gold);animation:blink 2s infinite}
+.pstatus.soon{color:var(--text3)}
+.picon{width:32px;height:32px;margin-bottom:18px;opacity:.65;transition:all .35s}
+.pcard:hover .picon{opacity:1;transform:scale(1.1)}
+.pcard h3{font-size:1.15rem;font-weight:700;margin-bottom:8px}
+.pcard p{font-size:13.5px;color:var(--text2);line-height:1.65}
 
-/* Reveal on scroll - but visible by default, JS adds the animation */
-.reveal { opacity:0; transform:translateY(30px); transition:opacity .7s ease,transform .7s ease; }
-.reveal.in { opacity:1; transform:translateY(0); }
-.reveal-delay-1 { transition-delay:.1s; }
-.reveal-delay-2 { transition-delay:.2s; }
-.reveal-delay-3 { transition-delay:.3s; }
-/* Fallback: if JS doesn't run, show everything after 1.5s */
-@media (prefers-reduced-motion:no-preference) {
-  .reveal { animation:revealFallback 0s 1.5s forwards; }
-  .reveal.in { animation:none; }
+/* MISSION */
+.mission-bg{background:rgba(12,12,18,.35);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.mquote{font-size:clamp(1.3rem,3.5vw,2rem);font-weight:700;line-height:1.3;letter-spacing:-.02em;max-width:760px;margin-bottom:56px}
+.mquote span{color:var(--text3)}
+.values{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.vitem{padding:24px;border:1px solid var(--line);border-radius:12px;background:rgba(12,12,18,.3);transition:all .3s}
+.vitem:hover{border-color:var(--line2);transform:translateY(-4px)}
+.vnum{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px}
+.vitem h3{font-size:.95rem;font-weight:700;margin-bottom:6px}
+.vitem p{font-size:13px;color:var(--text2);line-height:1.6}
+
+/* TEAM */
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bcard{background:rgba(12,12,18,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:32px;transition:all .35s}
+.bcard:hover{border-color:var(--line2);box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.bhead{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+.bavatar{width:48px;height:48px;border-radius:14px;background:var(--bg4);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--text2);flex-shrink:0}
+.bname{font-size:1.1rem;font-weight:700;letter-spacing:-.01em}
+.brole{font-size:12px;color:var(--gold);font-weight:500;margin-top:2px}
+.btext p{font-size:13.5px;line-height:1.75;color:var(--text2);margin-bottom:12px}
+.btext p:last-child{margin-bottom:0}
+.btext strong{color:var(--text);font-weight:600}
+
+/* CTA */
+.cta{text-align:center;padding:100px 20px;position:relative;z-index:1}
+.cta h2{font-size:clamp(1.5rem,4.5vw,2.6rem);font-weight:800;letter-spacing:-.02em;margin-bottom:14px}
+.cta p{font-size:1rem;color:var(--text2);margin-bottom:36px}
+
+/* FOOTER */
+footer{border-top:1px solid var(--line);padding:36px 20px;position:relative;z-index:1}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.fbrand{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.fmeta{font-size:12px;color:var(--text3)}
+
+/* MOBILE */
+@media(max-width:860px){
+  .product-grid{grid-template-columns:1fr}
+  .team-grid{grid-template-columns:1fr}
+  .values{grid-template-columns:1fr 1fr}
+  .nav-links a:not(.nav-cta){display:none}
 }
-@keyframes revealFallback { to { opacity:1; transform:translateY(0); } }
-
-/* ===== PRODUCT CARDS ===== */
-.product-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.product-card { background:rgba(12,12,18,.6); backdrop-filter:blur(10px); border:1px solid var(--line); border-radius:16px; padding:32px; transition:all .35s cubic-bezier(.4,0,.2,1); position:relative; overflow:hidden; }
-.product-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--line2),transparent); opacity:0; transition:opacity .35s; }
-.product-card:hover { border-color:var(--line2); transform:translateY(-6px); box-shadow:0 20px 50px rgba(0,0,0,.3); }
-.product-card:hover::before { opacity:1; }
-.product-card.featured { border-color:var(--gold-dim); }
-.product-card.featured::after { content:''; position:absolute; inset:0; border-radius:16px; padding:1px; background:linear-gradient(135deg,var(--gold-dim),transparent 50%); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; opacity:0; transition:opacity .35s; }
-.product-card.featured:hover::after { opacity:1; }
-.product-card .pc-status { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; margin-bottom:20px; display:flex; align-items:center; gap:6px; }
-.product-card .pc-status.live { color:var(--gold); }
-.product-card .pc-status.live::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--gold); box-shadow:0 0 6px var(--gold); }
-.product-card .pc-status.soon { color:var(--text3); }
-.product-card .pc-icon { width:36px; height:36px; margin-bottom:20px; opacity:.7; transition:opacity .35s,transform .35s; }
-.product-card:hover .pc-icon { opacity:1; transform:scale(1.1); }
-.product-card h3 { font-size:1.2rem; font-weight:700; margin-bottom:8px; letter-spacing:-.01em; }
-.product-card p { font-size:14px; color:var(--text2); line-height:1.65; }
-
-/* ===== MISSION ===== */
-.mission-section { background:rgba(12,12,18,.4); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-.mission-quote { font-size:clamp(1.4rem,3.5vw,2.2rem); font-weight:700; line-height:1.3; letter-spacing:-.02em; max-width:780px; margin-bottom:64px; }
-.mission-quote span { color:var(--text3); }
-.values-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-.value-item { padding:28px 24px; border:1px solid var(--line); border-radius:12px; background:rgba(12,12,18,.4); transition:all .3s; }
-.value-item:hover { border-color:var(--line2); transform:translateY(-4px); }
-.value-item .vi-num { font-size:12px; font-weight:700; color:var(--gold); margin-bottom:12px; }
-.value-item h3 { font-size:1rem; font-weight:700; margin-bottom:8px; }
-.value-item p { font-size:13px; color:var(--text2); line-height:1.6; }
-
-/* ===== TEAM ===== */
-.team-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.bio-card { background:rgba(12,12,18,.6); backdrop-filter:blur(10px); border:1px solid var(--line); border-radius:16px; padding:40px; transition:all .35s; }
-.bio-card:hover { border-color:var(--line2); box-shadow:0 20px 50px rgba(0,0,0,.2); }
-.bio-card .bc-header { display:flex; align-items:center; gap:16px; margin-bottom:28px; padding-bottom:28px; border-bottom:1px solid var(--line); }
-.bio-card .bc-avatar { width:52px; height:52px; border-radius:14px; background:var(--bg4); border:1px solid var(--line2); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:var(--text2); }
-.bio-card .bc-name { font-size:1.2rem; font-weight:700; letter-spacing:-.01em; }
-.bio-card .bc-role { font-size:13px; color:var(--gold); font-weight:500; margin-top:2px; }
-.bio-card .bc-text p { font-size:14px; line-height:1.75; color:var(--text2); margin-bottom:14px; }
-.bio-card .bc-text p:last-child { margin-bottom:0; }
-.bio-card .bc-text strong { color:var(--text); font-weight:600; }
-
-/* ===== CTA ===== */
-.cta { text-align:center; padding:120px 32px; position:relative; z-index:1; }
-.cta h2 { font-size:clamp(1.6rem,4vw,2.8rem); font-weight:800; letter-spacing:-.02em; margin-bottom:16px; }
-.cta p { font-size:1.05rem; color:var(--text2); margin-bottom:40px; }
-
-/* ===== FOOTER ===== */
-footer { border-top:1px solid var(--line); padding:40px 32px; position:relative; z-index:1; }
-.footer-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; }
-.footer-brand { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700; }
-.footer-meta { font-size:13px; color:var(--text3); }
-
-/* ===== RESPONSIVE ===== */
-@media (max-width:900px) {
-  .product-grid, .team-grid { grid-template-columns:1fr; }
-  .values-grid { grid-template-columns:1fr 1fr; }
-}
-@media (max-width:600px) {
-  nav { padding:0; }
-  .nav-links a:not(.nav-cta) { display:none; }
-  section { padding:80px 20px; }
-  .nav-inner, .footer-inner { padding:0 20px; }
-  .values-grid { grid-template-columns:1fr; }
-  .footer-inner { flex-direction:column; gap:16px; text-align:center; }
+@media(max-width:500px){
+  section{padding:70px 16px}
+  .nav-inner{padding:12px 16px}
+  .values{grid-template-columns:1fr}
+  .pcard,.bcard{padding:22px}
+  .hero{padding:100px 16px 60px}
+  .btn{padding:12px 22px;font-size:13px}
+  .footer-inner{flex-direction:column;text-align:center}
+  .mquote{font-size:1.3rem}
 }
 </style>
 </head>
 <body>
 
-<!-- Animated background -->
-<canvas class="bg-canvas" id="bgCanvas"></canvas>
 <div class="bg-grid"></div>
-<div class="bg-glow bg-glow-1"></div>
-<div class="bg-glow bg-glow-2"></div>
-<div class="bg-glow bg-glow-3"></div>
+<div class="bg-glow bg-g1"></div>
+<div class="bg-glow bg-g2"></div>
+<div class="bg-glow bg-g3"></div>
 
 <!-- NAV -->
-<nav id="nav">
+<nav>
   <div class="nav-inner">
     <a href="#" class="brand">
-      <svg class="brand-mark" viewBox="0 0 40 40" fill="none">
-        <!-- Luther's Rose inspired: cross in a ring with 5 petals -->
-        <circle cx="20" cy="20" r="18" stroke="#c9a96e" stroke-width="1.5" fill="none"/>
-        <circle cx="20" cy="20" r="14" stroke="#3b7ea1" stroke-width="1" fill="none" opacity=".5"/>
-        <!-- 5 simplified petals -->
-        <g fill="#c9a96e" opacity=".15">
-          <ellipse cx="20" cy="8" rx="4" ry="6"/>
-          <ellipse cx="31.3" cy="16.2" rx="4" ry="6" transform="rotate(72 31.3 16.2)"/>
-          <ellipse cx="27" cy="29.4" rx="4" ry="6" transform="rotate(144 27 29.4)"/>
-          <ellipse cx="13" cy="29.4" rx="4" ry="6" transform="rotate(216 13 29.4)"/>
-          <ellipse cx="8.7" cy="16.2" rx="4" ry="6" transform="rotate(288 8.7 16.2)"/>
+      <svg viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="18" stroke="#c9a96e" stroke-width="1.5"/>
+        <circle cx="20" cy="20" r="13" stroke="#3b7ea1" stroke-width="1" opacity=".4"/>
+        <g fill="#c9a96e" opacity=".12">
+          <ellipse cx="20" cy="9" rx="4" ry="5.5"/>
+          <ellipse cx="29.5" cy="15.8" rx="4" ry="5.5" transform="rotate(72 29.5 15.8)"/>
+          <ellipse cx="25.8" cy="27.8" rx="4" ry="5.5" transform="rotate(144 25.8 27.8)"/>
+          <ellipse cx="14.2" cy="27.8" rx="4" ry="5.5" transform="rotate(216 14.2 27.8)"/>
+          <ellipse cx="10.5" cy="15.8" rx="4" ry="5.5" transform="rotate(288 10.5 15.8)"/>
         </g>
-        <!-- Cross -->
-        <path d="M18.5 13h3v5h5v3h-5v6h-3v-6h-5v-3h5z" fill="#c9a96e"/>
+        <path d="M18.5 12h3v5h5v3h-5v6h-3v-6h-5v-3h5z" fill="#c9a96e"/>
       </svg>
       Luther's Code
     </a>
@@ -219,41 +189,30 @@ footer { border-top:1px solid var(--line); padding:40px 32px; position:relative;
 <!-- PRODUCT -->
 <section id="product">
   <div class="container">
-    <div class="reveal section-eyebrow">Products</div>
-    <h2 class="section-title reveal">Built for the church,<br>by the church.</h2>
-    <p class="section-desc reveal">Every app we build solves a real problem we've felt on a Sunday morning. Not tech for tech's sake. Tech that gets out of the way.</p>
-
+    <div class="eyebrow">Products</div>
+    <h2 class="stitle">Built for the church,<br>by the church.</h2>
+    <p class="sdesc">Every app we build solves a real problem we've felt on a Sunday morning. Not tech for tech's sake. Tech that gets out of the way.</p>
     <div class="product-grid">
-      <div class="product-card featured reveal">
-        <div class="pc-status live">Available Now</div>
-        <svg class="pc-icon" viewBox="0 0 40 40" fill="none" stroke="#c9a96e" stroke-width="1.5">
-          <rect x="14" y="6" width="12" height="22" rx="6"/>
-          <path d="M10 20v3a10 10 0 0 0 20 0v-3"/>
-          <line x1="20" y1="33" x2="20" y2="36"/>
-          <line x1="14" y1="36" x2="26" y2="36"/>
+      <div class="pcard featured">
+        <div class="pstatus live">Available Now</div>
+        <svg class="picon" viewBox="0 0 40 40" fill="none" stroke="#c9a96e" stroke-width="1.5">
+          <rect x="14" y="6" width="12" height="22" rx="6"/><path d="M10 20v3a10 10 0 0 0 20 0v-3"/><line x1="20" y1="33" x2="20" y2="36"/><line x1="14" y1="36" x2="26" y2="36"/>
         </svg>
         <h3>CrossPresenter</h3>
         <p>AI-powered presentation software that listens to live audio and detects Bible scriptures as your pastor speaks. Voice commands, AI deck builder, sermon prep tool, and fullscreen projection.</p>
       </div>
-
-      <div class="product-card reveal reveal-delay-1">
-        <div class="pc-status soon">Coming Soon</div>
-        <svg class="pc-icon" viewBox="0 0 40 40" fill="none" stroke="#8a8a9a" stroke-width="1.5">
-          <path d="M8 8h24v24H8z"/>
-          <line x1="14" y1="14" x2="26" y2="14"/>
-          <line x1="14" y1="20" x2="26" y2="20"/>
-          <line x1="14" y1="26" x2="22" y2="26"/>
+      <div class="pcard">
+        <div class="pstatus soon">Coming Soon</div>
+        <svg class="picon" viewBox="0 0 40 40" fill="none" stroke="#8a8a9a" stroke-width="1.5">
+          <path d="M8 8h24v24H8z"/><line x1="14" y1="14" x2="26" y2="14"/><line x1="14" y1="20" x2="26" y2="20"/><line x1="14" y1="26" x2="22" y2="26"/>
         </svg>
         <h3>Sermon Studio</h3>
         <p>Desktop sermon preparation tool. AI-assisted outlining, scripture discovery, illustration suggestions, and one-click export to CrossPresenter slides. From study to stage.</p>
       </div>
-
-      <div class="product-card reveal reveal-delay-2">
-        <div class="pc-status soon">Coming Soon</div>
-        <svg class="pc-icon" viewBox="0 0 40 40" fill="none" stroke="#8a8a9a" stroke-width="1.5">
-          <path d="M14 28V10l16-3v18"/>
-          <circle cx="11" cy="28" r="3"/>
-          <circle cx="27" cy="25" r="3"/>
+      <div class="pcard">
+        <div class="pstatus soon">Coming Soon</div>
+        <svg class="picon" viewBox="0 0 40 40" fill="none" stroke="#8a8a9a" stroke-width="1.5">
+          <path d="M14 28V10l16-3v18"/><circle cx="11" cy="28" r="3"/><circle cx="27" cy="25" r="3"/>
         </svg>
         <h3>Worship Planner</h3>
         <p>Plan your set list, organize your song library, manage keys and tempos, and sync with your team. Built by a worship leader who knows the workflow.</p>
@@ -263,32 +222,15 @@ footer { border-top:1px solid var(--line); padding:40px 32px; position:relative;
 </section>
 
 <!-- MISSION -->
-<section id="mission" class="mission-section">
+<section id="mission" class="mission-bg">
   <div class="container">
-    <div class="reveal section-eyebrow">Mission</div>
-    <p class="mission-quote reveal">Too many Sunday mornings, the tech team is stuck behind screens while worship happens around them. <span>We believe it shouldn't be that way.</span></p>
-
-    <div class="values-grid">
-      <div class="value-item reveal">
-        <div class="vi-num">01</div>
-        <h3>Serve and Worship</h3>
-        <p>The crew running technology should worship alongside the congregation. Present in the moment while systems handle the timing.</p>
-      </div>
-      <div class="value-item reveal reveal-delay-1">
-        <div class="vi-num">02</div>
-        <h3>Automation with Purpose</h3>
-        <p>We're not replacing anyone. We're freeing them to be more present, more engaged, and more available where it matters.</p>
-      </div>
-      <div class="value-item reveal reveal-delay-2">
-        <div class="vi-num">03</div>
-        <h3>Built by the Church</h3>
-        <p>Every feature comes from real Sunday morning experience. We build what we need and what we know will help yours.</p>
-      </div>
-      <div class="value-item reveal reveal-delay-3">
-        <div class="vi-num">04</div>
-        <h3>Accessible to All</h3>
-        <p>Powerful technology shouldn't require a massive budget or a dedicated media team. Any church, any size.</p>
-      </div>
+    <div class="eyebrow">Mission</div>
+    <p class="mquote">Too many Sunday mornings, the tech team is stuck behind screens while worship happens around them. <span>We believe it shouldn't be that way.</span></p>
+    <div class="values">
+      <div class="vitem"><div class="vnum">01</div><h3>Serve and Worship</h3><p>The crew running technology should worship alongside the congregation. Present in the moment while systems handle the timing.</p></div>
+      <div class="vitem"><div class="vnum">02</div><h3>Automation with Purpose</h3><p>We're not replacing anyone. We're freeing them to be more present, more engaged, and more available where it matters.</p></div>
+      <div class="vitem"><div class="vnum">03</div><h3>Built by the Church</h3><p>Every feature comes from real Sunday morning experience. We build what we need and what we know will help yours.</p></div>
+      <div class="vitem"><div class="vnum">04</div><h3>Accessible to All</h3><p>Powerful technology shouldn't require a massive budget or a dedicated media team. Any church, any size.</p></div>
     </div>
   </div>
 </section>
@@ -296,35 +238,21 @@ footer { border-top:1px solid var(--line); padding:40px 32px; position:relative;
 <!-- TEAM -->
 <section id="team">
   <div class="container">
-    <div class="reveal section-eyebrow">The Team</div>
-    <h2 class="section-title reveal">Two guys, one mission.</h2>
-    <p class="section-desc reveal">A worship leader who spots what's missing. An agentic coder who ships what he envisions.</p>
-
+    <div class="eyebrow">The Team</div>
+    <h2 class="stitle">Two guys, one mission.</h2>
+    <p class="sdesc">A worship leader who spots what's missing. An agentic coder who ships what he envisions.</p>
     <div class="team-grid">
-      <div class="bio-card reveal">
-        <div class="bc-header">
-          <div class="bc-avatar">EW</div>
-          <div>
-            <div class="bc-name">Eric Woodard</div>
-            <div class="bc-role">Co-Founder, Engineering</div>
-          </div>
-        </div>
-        <div class="bc-text">
+      <div class="bcard">
+        <div class="bhead"><div class="bavatar">EW</div><div><div class="bname">Eric Woodard</div><div class="brole">Co-Founder, Engineering</div></div></div>
+        <div class="btext">
           <p>Eric Woodard is an evangelist, father of two daughters, entrepreneur, and agentic coder since 2024. He has a passion for systems architecture, streamlining, and automation, not for the sake of technology itself, but for what it gives back to people.</p>
           <p>His goal isn't to replace the crew. It's to free them. Too many Sunday mornings, the tech team is stuck behind screens, heads down, managing slides and cues while the worship happens around them. Eric believes it shouldn't be that way. The people running the technology should be able to worship alongside the congregation, present in the moment, while the systems handle the timing. <strong>Let the crew give direction and still be in the room. Let them serve and worship at the same time.</strong></p>
           <p>That's the heart behind Luther's Code: technology that steps back so people can step forward.</p>
         </div>
       </div>
-
-      <div class="bio-card reveal reveal-delay-1">
-        <div class="bc-header">
-          <div class="bc-avatar">JW</div>
-          <div>
-            <div class="bc-name">Judah Webb</div>
-            <div class="bc-role">Co-Founder, Product & Ministry</div>
-          </div>
-        </div>
-        <div class="bc-text">
+      <div class="bcard">
+        <div class="bhead"><div class="bavatar">JW</div><div><div class="bname">Judah Webb</div><div class="brole">Co-Founder, Product & Ministry</div></div></div>
+        <div class="btext">
           <p>Judah Webb grew up in ministry. With parents deeply involved in ministry work for decades, church life isn't something Judah stumbled into. It's the air he's breathed since childhood. By the time most kids were figuring out what they wanted to do, Judah was already serving in church ministry, learning the rhythms of worship, tech, and production from the ground up.</p>
           <p>Today, Judah serves as worship leader, bringing over two decades of hands-on ministry experience to everything he touches. He's the rare blend of creative and technical, equally at home leading a congregation in worship as he is behind a soundboard, designing stage sets, or building production workflows that make Sunday mornings run seamlessly.</p>
           <p>His superpower is spotting what's missing. Where others see a smooth service, Judah sees the friction. The manual slide clicks, the fumbled transitions, the moments where technology gets in the way of worship instead of enabling it. <strong>That instinct for "this could be better" is what drives Luther's Code.</strong></p>
@@ -337,122 +265,32 @@ footer { border-top:1px solid var(--line); padding:40px 32px; position:relative;
 
 <!-- CTA -->
 <div class="cta">
-  <h2 class="reveal">Ready to transform your worship services?</h2>
-  <p class="reveal" style="margin-bottom:40px;">Launch CrossPresenter now. No download required.</p>
-  <a href="app.html" class="btn btn-solid reveal">Launch CrossPresenter</a>
+  <h2>Ready to transform your worship services?</h2>
+  <p>Launch CrossPresenter now. No download required.</p>
+  <a href="app.html" class="btn btn-solid">Launch CrossPresenter</a>
 </div>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
-    <div class="footer-brand">
-      <svg style="width:22px;height:22px;" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="18" stroke="#c9a96e" stroke-width="1.5" fill="none"/>
-        <path d="M18.5 13h3v5h5v3h-5v6h-3v-6h-5v-3h5z" fill="#c9a96e"/>
+    <div class="fbrand">
+      <svg style="width:20px;height:20px" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="18" stroke="#c9a96e" stroke-width="1.5"/>
+        <path d="M18.5 12h3v5h5v3h-5v6h-3v-6h-5v-3h5z" fill="#c9a96e"/>
       </svg>
       Luther's Code
     </div>
-    <div class="footer-meta">© 2026 Luther's Code. Built with conviction.</div>
+    <div class="fmeta">&copy; 2026 Luther's Code. Built with conviction.</div>
   </div>
 </footer>
 
 <script>
-// ===== PARTICLE BACKGROUND =====
-const canvas = document.getElementById('bgCanvas');
-const ctx = canvas.getContext('2d');
-let particles = [];
-let mouseX = 0, mouseY = 0;
+// Nav shrink on scroll
+const nav=document.querySelector('nav');
+window.addEventListener('scroll',()=>{nav.style.padding=window.scrollY>20?'0':'0'});
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener('resize', resize);
-
-class Particle {
-  constructor() {
-    this.reset();
-    this.y = Math.random() * canvas.height;
-  }
-  reset() {
-    this.x = Math.random() * canvas.width;
-    this.y = Math.random() * canvas.height;
-    this.vx = (Math.random() - 0.5) * 0.15;
-    this.vy = (Math.random() - 0.5) * 0.15;
-    this.size = Math.random() * 1.5 + 0.5;
-    this.opacity = Math.random() * 0.3 + 0.05;
-    const colors = ['#c9a96e', '#3b7ea1', '#e8e8f0'];
-    this.color = colors[Math.floor(Math.random() * colors.length)];
-  }
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    // Mouse interaction
-    const dx = this.x - mouseX;
-    const dy = this.y - mouseY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < 120) {
-      this.x += dx / dist * 0.5;
-      this.y += dy / dist * 0.5;
-    }
-    if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-      this.reset();
-    }
-  }
-  draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.globalAlpha = this.opacity;
-    ctx.fill();
-  }
-}
-
-for (let i = 0; i < 60; i++) particles.push(new Particle());
-
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  particles.forEach(p => { p.update(); p.draw(); });
-  ctx.globalAlpha = 1;
-  requestAnimationFrame(animate);
-}
-animate();
-
-window.addEventListener('mousemove', e => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
-});
-
-// ===== NAV SCROLL =====
-const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', window.scrollY > 20);
-});
-
-// ===== SCROLL REVEAL =====
-function revealAll() {
-  document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
-}
-
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('in');
-      observer.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
-
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-// Safety: reveal everything after 2s no matter what
-setTimeout(revealAll, 2000);
-
-// ===== SERVICE WORKER =====
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
+// Service worker
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 </script>
 </body>
 </html>
