@@ -2,60 +2,81 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CrossPresenter — Luther's Code</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0a0a1a">
+<meta name="theme-color" content="#0a0a0f">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 /* ========== RESET & BASE ========== */
-* { margin:0; padding:0; box-sizing:border-box; }
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
-  --bg:#0a0a1a; --bg2:#12122a; --bg3:#1a1a3a;
-  --text:#e8e8ff; --text2:#a0a0c0; --text3:#606080;
-  --accent:#c9a96e; --accent2:#d4b87e; --accent3:#9ec5a8;
-  --success:#00b894; --danger:#e74c3c; --warn:#fdcb6e;
-  --border:#2a2a4a; --radius:12px;
+  --bg:#0a0a0f; --surface:#14141f; --surface2:#1a1a28; --surface3:#222230;
+  --text:#e8e8f0; --text2:#9090a8; --text3:#505068;
+  --gold:#c9a96e; --gold-hi:#d4b87e;
+  --blue:#1b7bb8; --blue-hi:#2a8fc8;
+  --red:#c62828; --green:#00b894; --warn:#fdcb6e;
+  --border:#252535; --border2:#1e1e2e;
+  --radius:10px; --radius-sm:6px;
+  --shadow:0 2px 8px rgba(0,0,0,.3);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.5);
+  --transition:0.15s ease;
 }
 html,body { height:100%; overflow:hidden; }
-body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:14px; }
+body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:14px; -webkit-font-smoothing:antialiased; }
 input,textarea,select { font-family:inherit; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--text3); }
+
+/* ========== ICONS ========== */
+.icon { width:16px; height:16px; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+.icon-lg { width:20px; height:20px; }
 
 /* ========== LAYOUT ========== */
-.app { display:flex; height:100vh; }
-.sidebar { width:320px; min-width:320px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
-.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.app { display:flex; height:100vh; height:100dvh; }
+.sidebar { width:280px; min-width:280px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; transition:transform var(--transition); z-index:200; }
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
 
 /* ========== SIDEBAR ========== */
-.sidebar-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-.logo { font-size:20px; font-weight:700; background:linear-gradient(135deg,var(--accent2),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.sidebar-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+.logo-icon { width:32px; height:32px; flex-shrink:0; }
+.logo-text { display:flex; flex-direction:column; }
+.logo { font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
 .logo-sub { font-size:11px; color:var(--text3); }
 
 .deck-list { flex:1; overflow-y:auto; padding:8px; }
-.deck-item { padding:12px; border-radius:8px; cursor:pointer; margin-bottom:4px; transition:background .15s; }
-.deck-item:hover { background:var(--bg3); }
-.deck-item.active { background:var(--accent); }
-.deck-item-title { font-weight:600; font-size:13px; }
+.deck-section-label { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; padding:8px 8px 4px; }
+.deck-item { padding:10px 12px; border-radius:var(--radius-sm); cursor:pointer; margin-bottom:2px; transition:background var(--transition); }
+.deck-item:hover { background:var(--surface2); }
+.deck-item.active { background:var(--surface3); border-left:3px solid var(--gold); padding-left:9px; }
+.deck-item-title { font-weight:600; font-size:13px; color:var(--text); }
 .deck-item-meta { font-size:11px; color:var(--text3); margin-top:2px; }
 
-.sidebar-actions { padding:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
+.sidebar-actions { padding:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
 
 /* ========== BUTTONS ========== */
-.btn { padding:10px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
-.btn-primary { background:var(--accent); color:#fff; }
-.btn-primary:hover { background:var(--accent2); }
-.btn-secondary { background:var(--bg3); color:var(--text); }
-.btn-secondary:hover { background:var(--border); }
-.btn-success { background:var(--success); color:#fff; }
-.btn-danger { background:var(--danger); color:#fff; }
-.btn-sm { padding:6px 12px; font-size:12px; }
-.btn-icon { width:36px; height:36px; padding:0; border-radius:8px; }
+.btn { padding:8px 14px; border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; transition:all var(--transition); display:flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap; }
+.btn-primary { background:var(--gold); color:#fff; }
+.btn-primary:hover { background:var(--gold-hi); }
+.btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.btn-secondary:hover { background:var(--surface3); border-color:var(--text3); }
+.btn-blue { background:var(--blue); color:#fff; }
+.btn-blue:hover { background:var(--blue-hi); }
+.btn-success { background:var(--green); color:#fff; }
+.btn-danger { background:var(--red); color:#fff; }
+.btn-ghost { background:transparent; color:var(--text2); }
+.btn-ghost:hover { background:var(--surface2); color:var(--text); }
+.btn-sm { padding:6px 10px; font-size:12px; }
+.btn-icon { width:36px; height:36px; padding:0; border-radius:var(--radius-sm); }
 .btn:disabled { opacity:.4; cursor:not-allowed; }
 
 /* ========== TOP BAR ========== */
-.topbar { height:56px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:12px; }
-.topbar-title { font-weight:600; font-size:15px; flex:1; }
-.topbar-controls { display:flex; gap:8px; align-items:center; }
+.topbar { height:52px; min-height:52px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 12px; gap:8px; }
+.topbar-title { font-weight:600; font-size:14px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.topbar-controls { display:flex; gap:6px; align-items:center; }
+.hamburger { display:none; }
 
 /* ========== PREVIEW AREA ========== */
 .preview-area { flex:1; display:flex; align-items:center; justify-content:center; background:#000; position:relative; overflow:hidden; }
@@ -67,9 +88,9 @@ input,textarea,select { font-family:inherit; }
 .slide.active { opacity:1; z-index:2; }
 .slide.bg-black { background:#000; }
 .slide.bg-white { background:#fff; color:#000; }
-.slide.bg-gradient { background:linear-gradient(135deg,#1a1a3a,#0a0a1a); }
-.slide.bg-worship { background:linear-gradient(180deg,#0a0a2a 0%,#1a1a4a 50%,#0a0a2a 100%); }
-.slide.bg-nature { background:linear-gradient(135deg,#0d4f3c,#1a7a5a); }
+.slide.bg-dark { background:#0a0a0f; }
+.slide.bg-worship { background:#0d1a2e; }
+.slide.bg-nature { background:#0d3b2e; }
 
 .slide h1 { font-size:clamp(2rem,6vw,5rem); font-weight:800; line-height:1.2; margin-bottom:.3em; }
 .slide h2 { font-size:clamp(1.5rem,4vw,3rem); font-weight:600; line-height:1.3; }
@@ -80,129 +101,193 @@ input,textarea,select { font-family:inherit; }
 .slide .notification { font-size:clamp(1.5rem,5vw,4rem); font-weight:700; padding:1em; }
 
 /* ========== EDITOR PANEL ========== */
-.editor-panel { position:absolute; top:0; right:0; width:380px; height:100%; background:var(--bg2); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .3s; z-index:100; display:flex; flex-direction:column; }
+.editor-panel { position:absolute; top:0; right:0; width:360px; height:100%; background:var(--surface); border-left:1px solid var(--border); transform:translateX(100%); transition:transform var(--transition); z-index:100; display:flex; flex-direction:column; box-shadow:var(--shadow-lg); }
 .editor-panel.open { transform:translateX(0); }
-.editor-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.editor-header { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.editor-header h2 { font-size:15px; font-weight:700; }
 .editor-body { flex:1; overflow-y:auto; padding:16px; }
-.editor-field { margin-bottom:16px; }
+.editor-section { margin-bottom:20px; }
+.editor-section-title { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
+.editor-field { margin-bottom:14px; }
 .editor-field label { display:block; font-size:12px; color:var(--text2); margin-bottom:6px; font-weight:600; }
-.editor-field input, .editor-field textarea, .editor-field select { width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; }
-.editor-field textarea { min-height:100px; resize:vertical; }
-.slide-type-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
-.slide-type-btn { padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; cursor:pointer; text-align:center; font-size:12px; transition:all .15s; }
-.slide-type-btn:hover, .slide-type-btn.selected { border-color:var(--accent); background:var(--bg3); }
+.editor-field input, .editor-field textarea, .editor-field select { width:100%; padding:8px 10px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px; transition:border-color var(--transition); }
+.editor-field input:focus, .editor-field textarea:focus, .editor-field select:focus { outline:none; border-color:var(--blue); }
+.editor-field textarea { min-height:80px; resize:vertical; }
+.slide-type-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.slide-type-btn { padding:8px 4px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; text-align:center; font-size:11px; transition:all var(--transition); font-weight:500; }
+.slide-type-btn:hover { border-color:var(--text3); }
+.slide-type-btn.selected { border-color:var(--gold); background:var(--surface3); color:var(--gold); }
 
 /* ========== THUMBNAIL STRIP ========== */
-.thumb-strip { height:120px; min-height:120px; background:var(--bg2); border-top:1px solid var(--border); display:flex; align-items:center; padding:8px; gap:8px; overflow-x:auto; }
-.thumb { min-width:180px; width:180px; height:100px; background:var(--bg3); border:2px solid transparent; border-radius:8px; cursor:pointer; position:relative; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:8px; text-align:center; }
-.thumb:hover { border-color:var(--accent2); }
-.thumb.active { border-color:var(--accent); }
-.thumb-number { position:absolute; top:4px; left:6px; font-size:10px; color:var(--text3); font-weight:700; }
-.thumb-delete { position:absolute; top:4px; right:6px; width:18px; height:18px; border-radius:50%; background:var(--danger); color:#fff; font-size:10px; display:none; align-items:center; justify-content:center; cursor:pointer; }
+.thumb-strip { height:100px; min-height:100px; background:var(--surface); border-top:1px solid var(--border); display:flex; align-items:center; padding:8px; gap:8px; overflow-x:auto; overflow-y:hidden; }
+.thumb { min-width:160px; width:160px; height:84px; border:2px solid transparent; border-radius:var(--radius-sm); cursor:pointer; position:relative; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:6px; text-align:center; transition:all var(--transition); }
+.thumb:hover { border-color:var(--text3); transform:translateY(-2px); }
+.thumb.active { border-color:var(--gold); }
+.thumb-number { position:absolute; top:3px; left:5px; font-size:10px; color:rgba(255,255,255,.5); font-weight:700; }
+.thumb-type { position:absolute; top:3px; right:5px; font-size:9px; color:rgba(255,255,255,.4); font-weight:600; text-transform:uppercase; }
+.thumb-delete { position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%; background:var(--red); color:#fff; font-size:10px; display:none; align-items:center; justify-content:center; cursor:pointer; }
 .thumb:hover .thumb-delete { display:flex; }
+.thumb:hover .thumb-type { display:none; }
 .thumb-title { font-size:11px; font-weight:600; line-height:1.3; word-break:break-word; }
+.thumb-add { display:flex; align-items:center; justify-content:center; color:var(--text3); border:2px dashed var(--border); }
+.thumb-add:hover { border-color:var(--gold); color:var(--gold); }
 
 /* ========== MODALS ========== */
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:1000; }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:1000; }
 .modal-overlay.show { display:flex; }
-.modal { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; }
-.modal h2 { margin-bottom:16px; font-size:18px; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal h2 { margin-bottom:16px; font-size:18px; font-weight:700; }
 .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
 
 /* ========== AI BUILDER ========== */
-.ai-builder { }
-.ai-builder textarea { width:100%; min-height:100px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; resize:vertical; }
+.ai-builder textarea { width:100%; min-height:100px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:14px; resize:vertical; }
+.ai-builder textarea:focus { outline:none; border-color:var(--blue); }
 .ai-presets { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-.ai-preset { padding:6px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:20px; font-size:12px; cursor:pointer; }
-.ai-preset:hover { border-color:var(--accent); }
+.ai-preset { padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; font-size:12px; cursor:pointer; transition:all var(--transition); }
+.ai-preset:hover { border-color:var(--gold); color:var(--gold); }
 
 /* ========== VOICE COMMAND BAR ========== */
-.voice-bar { position:fixed; bottom:140px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:200; }
-.voice-indicator { padding:8px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:30px; display:none; align-items:center; gap:8px; font-size:13px; }
+.voice-bar { position:fixed; bottom:120px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:200; }
+.voice-indicator { padding:8px 16px; background:var(--surface); border:1px solid var(--border); border-radius:30px; display:none; align-items:center; gap:8px; font-size:13px; box-shadow:var(--shadow); }
 .voice-indicator.show { display:flex; }
-.voice-indicator.listening { border-color:var(--success); }
-.voice-indicator .dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1s infinite; }
+.voice-indicator.listening { border-color:var(--green); }
+.voice-indicator .dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
 
 /* ========== SCRIPTURE DETECTION QUEUE ========== */
-.detection-panel { position:absolute; bottom:132px; right:16px; width:360px; max-height:400px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; z-index:150; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.5); transition:transform .3s, opacity .3s; }
+.detection-panel { position:absolute; bottom:112px; right:12px; width:340px; max-height:380px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; z-index:150; overflow:hidden; box-shadow:var(--shadow-lg); transition:transform .3s, opacity .3s; }
 .detection-panel.hidden-panel { transform:translateY(20px); opacity:0; pointer-events:none; }
-.detection-header { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--bg3); }
+.detection-header { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--surface2); }
 .detection-header-title { font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; }
-.detection-header-title .pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1s infinite; }
+.detection-header-title .pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:pulse 1s infinite; }
 .detection-list { flex:1; overflow-y:auto; padding:8px; }
 .detection-empty { text-align:center; padding:24px 12px; color:var(--text3); font-size:12px; }
-.detection-item { display:flex; align-items:center; padding:10px; border-radius:8px; margin-bottom:6px; background:var(--bg3); border:1px solid var(--border); transition:all .2s; animation:slideIn .3s; }
+.detection-item { display:flex; align-items:center; padding:10px; border-radius:var(--radius-sm); margin-bottom:6px; background:var(--surface2); border:1px solid var(--border); transition:all .2s; animation:slideIn .3s; }
 @keyframes slideIn { from{transform:translateX(20px);opacity:0;} to{transform:translateX(0);opacity:1;} }
-.detection-item.high { border-left:3px solid var(--success); }
+.detection-item.high { border-left:3px solid var(--green); }
 .detection-item.med { border-left:3px solid var(--warn); }
 .detection-item.low { border-left:3px solid var(--text3); }
 .detection-item .det-ref { font-weight:700; font-size:14px; flex:1; }
 .detection-item .det-confidence { font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:600; }
-.detection-item .det-confidence.high { background:var(--success); color:#fff; }
+.detection-item .det-confidence.high { background:var(--green); color:#fff; }
 .detection-item .det-confidence.med { background:var(--warn); color:#000; }
 .detection-item .det-confidence.low { background:var(--text3); color:#fff; }
 .detection-item .det-actions { display:flex; gap:4px; margin-left:8px; }
-.detection-item .det-btn { width:28px; height:28px; border-radius:6px; border:none; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; }
-.detection-item .det-btn.send { background:var(--success); color:#fff; }
-.detection-item .det-btn.dismiss { background:var(--danger); color:#fff; }
-.detection-item .det-btn.preview { background:var(--accent); color:#fff; }
+.detection-item .det-btn { width:28px; height:28px; border-radius:var(--radius-sm); border:none; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; }
+.detection-item .det-btn.send { background:var(--green); color:#fff; }
+.detection-item .det-btn.dismiss { background:var(--red); color:#fff; }
+.detection-item .det-btn.preview { background:var(--gold); color:#fff; }
 .detection-item .det-preview-text { font-size:11px; color:var(--text2); margin-top:4px; line-height:1.4; max-height:40px; overflow:hidden; text-overflow:ellipsis; }
 .detection-footer { padding:8px 14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text3); }
 .detection-mode-toggle { display:flex; align-items:center; gap:6px; cursor:pointer; }
 .detection-mode-toggle .toggle { transform:scale(.8); }
 
 /* ========== LIVE TRANSCRIPT ========== */
-.transcript-overlay { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); max-width:80%; padding:8px 16px; background:rgba(0,0,0,.7); border-radius:8px; font-size:13px; color:var(--text2); z-index:10; display:none; text-align:center; }
+.transcript-overlay { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); max-width:80%; padding:8px 16px; background:rgba(0,0,0,.7); border-radius:var(--radius-sm); font-size:13px; color:var(--text2); z-index:10; display:none; text-align:center; }
 .transcript-overlay.show { display:block; }
-.transcript-overlay .highlight { color:var(--accent3); font-weight:600; }
+.transcript-overlay .highlight { color:var(--gold); font-weight:600; }
 
 /* ========== STATUS ========== */
-.status-overlay { position:absolute; top:12px; left:12px; background:rgba(0,0,0,.6); padding:6px 12px; border-radius:6px; font-size:12px; color:var(--text2); display:flex; gap:12px; align-items:center; z-index:10; }
-.status-overlay .live-dot { width:6px; height:6px; border-radius:50%; background:var(--danger); }
+.status-overlay { position:absolute; top:12px; left:12px; background:rgba(0,0,0,.6); padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; color:var(--text2); display:flex; gap:12px; align-items:center; z-index:10; }
+.status-overlay .live-dot { width:6px; height:6px; border-radius:50%; background:var(--red); }
 
 /* ========== SETTINGS ========== */
 .settings-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
 .settings-row:last-child { border:none; }
-.toggle { width:44px; height:24px; background:var(--bg); border-radius:12px; position:relative; cursor:pointer; border:1px solid var(--border); }
-.toggle.on { background:var(--success); }
-.toggle::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition:transform .2s; }
-.toggle.on::after { transform:translateX(20px); }
+.toggle { width:40px; height:22px; background:var(--bg); border-radius:11px; position:relative; cursor:pointer; border:1px solid var(--border); transition:background var(--transition); }
+.toggle.on { background:var(--green); border-color:var(--green); }
+.toggle::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; background:#fff; border-radius:50%; transition:transform var(--transition); }
+.toggle.on::after { transform:translateX(18px); }
+
+/* ========== MOBILE OVERLAY ========== */
+.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:150; }
+.sidebar-overlay.show { display:block; }
 
 /* ========== UTIL ========== */
 .hidden { display:none !important; }
 .fade-in { animation:fadeIn .3s; }
 @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+/* ========== MOBILE ========== */
+@media (max-width: 768px) {
+  .sidebar { position:fixed; left:0; top:0; height:100%; transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  .hamburger { display:flex; }
+  .editor-panel { width:100%; height:60%; top:auto; bottom:0; transform:translateY(100%); border-left:none; border-top:1px solid var(--border); border-radius:var(--radius) var(--radius) 0 0; }
+  .editor-panel.open { transform:translateY(0); }
+  .detection-panel { width:calc(100% - 24px); right:12px; bottom:110px; }
+  .topbar { padding:0 8px; }
+  .topbar-title { font-size:13px; }
+  .thumb { min-width:120px; width:120px; height:72px; }
+  .btn-sm { padding:6px 8px; font-size:11px; }
+  .voice-bar { bottom:110px; }
+}
+@media (max-width: 480px) {
+  .sidebar { width:260px; min-width:260px; }
+  .topbar-controls .btn span { display:none; }
+  .topbar-controls .btn { padding:6px 8px; }
+  .thumb { min-width:100px; width:100px; height:64px; }
+}
 </style>
 </head>
 <body>
 
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
 <div class="app">
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div>
-        <div class="logo">+ CrossPresenter</div>
-        <div class="logo-sub">AI Church Presentation</div>
+      <svg class="logo-icon" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="18" fill="none" stroke="#c9a96e" stroke-width="2"/>
+        <path d="M20 10 L20 30 M14 16 L26 16 M14 24 L26 24" stroke="#c9a96e" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="logo-text">
+        <div class="logo">CrossPresenter</div>
+        <div class="logo-sub">Luther's Code</div>
       </div>
     </div>
     <div class="deck-list" id="deckList"></div>
     <div class="sidebar-actions">
-      <button class="btn btn-primary" onclick="openAIBuilder()"> Build with AI</button>
-      <button class="btn btn-secondary" onclick="openSermonPrep()"> Sermon Prep</button>
-      <button class="btn btn-secondary" onclick="newDeck()"> New Deck</button>
-      <button class="btn btn-secondary" onclick="openSettings()"> Settings</button>
+      <button class="btn btn-primary" onclick="openAIBuilder()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M3 12h3M18 12h3M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/></svg>
+        Build with AI
+      </button>
+      <button class="btn btn-secondary" onclick="openSermonPrep()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4V4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        Sermon Prep
+      </button>
+      <button class="btn btn-secondary" onclick="newDeck()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 12v6M9 15h6"/></svg>
+        New Deck
+      </button>
+      <button class="btn btn-secondary" onclick="openSettings()">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
     </div>
   </div>
 
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
+      <button class="btn btn-ghost btn-icon hamburger" onclick="toggleSidebar()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
       <div class="topbar-title" id="topbarTitle">No deck selected</div>
       <div class="topbar-controls">
-        <button class="btn btn-sm btn-secondary" id="voiceBtn" onclick="toggleVoice()"> Voice + AI</button>
-        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()"> Edit</button>
-        <button class="btn btn-sm btn-success" onclick="present()"> Present</button>
+        <button class="btn btn-sm btn-secondary" id="voiceBtn" onclick="toggleVoice()">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+          <span>Voice</span>
+        </button>
+        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Edit</span>
+        </button>
+        <button class="btn btn-sm btn-success" onclick="present()">
+          <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Present</span>
+        </button>
       </div>
     </div>
 
@@ -215,14 +300,13 @@ input,textarea,select { font-family:inherit; }
       <div class="preview-frame" id="previewFrame">
         <div class="slide-canvas" id="slideCanvas">
           <div style="text-align:center;color:var(--text3);">
-            <h2 style="font-size:2rem;margin-bottom:.5em;">Welcome to CrossPresenter</h2>
-            <p>Select or create a deck to get started</p>
-            <p style="margin-top:1em;font-size:.9rem;">Try "Build with AI" to generate a service in seconds</p>
+            <h2 style="font-size:1.8rem;margin-bottom:.5em;font-weight:700;color:var(--text2);">Welcome to CrossPresenter</h2>
+            <p style="font-size:1rem;">Select or create a deck to get started</p>
+            <p style="margin-top:1em;font-size:.85rem;color:var(--text3);">Try "Build with AI" to generate a service in seconds</p>
           </div>
         </div>
       </div>
 
-      <!-- Voice indicator -->
       <div class="voice-bar">
         <div class="voice-indicator" id="voiceIndicator">
           <div class="dot"></div>
@@ -230,7 +314,6 @@ input,textarea,select { font-family:inherit; }
         </div>
       </div>
 
-      <!-- Scripture Detection Queue -->
       <div class="detection-panel hidden-panel" id="detectionPanel">
         <div class="detection-header">
           <div class="detection-header-title">
@@ -251,30 +334,29 @@ input,textarea,select { font-family:inherit; }
         </div>
       </div>
 
-      <!-- Live Transcript Overlay -->
       <div class="transcript-overlay" id="transcriptOverlay"></div>
     </div>
 
-    <!-- Thumbnail strip -->
     <div class="thumb-strip" id="thumbStrip"></div>
 
-    <!-- Editor Panel -->
     <div class="editor-panel" id="editorPanel">
       <div class="editor-header">
-        <h2 style="font-size:16px;">Edit Slide</h2>
-        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()"></button>
+        <h2>Edit Slide</h2>
+        <button class="btn btn-sm btn-ghost btn-icon" onclick="toggleEditor()">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
       <div class="editor-body" id="editorBody"></div>
     </div>
   </div>
 </div>
 
-<!-- MODALS -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalContent"></div>
 </div>
 
 <script>
+
 // ============================================================
 // CROSSPRESENTER — AI Church Presentation PWA
 // ============================================================
@@ -322,16 +404,22 @@ function createDemoDeck() {
     title: 'Sunday Service — Demo',
     created: Date.now(),
     slides: [
-      { type:'welcome', bg:'gradient', title:'Welcome to Church', subtitle:'We\'re glad you\'re here' },
+      { type:'welcome', bg:'dark', title:'Welcome to Church', subtitle:'We\'re glad you\'re here' },
       { type:'worship', bg:'worship', lyrics:'How great is our God\nSing with me\nHow great is our God', title:'How Great Is Our God' },
       { type:'verse', bg:'black', verseRef:'John 3:16', verseText:'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.' },
-      { type:'announcement', bg:'gradient', title:'Upcoming Events', text:'Wednesday Bible Study — 7pm\nFriday Youth Night — 6pm\nSunday Service — 10am' },
+      { type:'announcement', bg:'dark', title:'Upcoming Events', text:'Wednesday Bible Study — 7pm\nFriday Youth Night — 6pm\nSunday Service — 10am' },
       { type:'blank', bg:'black' },
     ],
   };
   App.decks.push(deck);
   App.currentDeckId = deck.id;
   save();
+}
+
+// ---------- MOBILE SIDEBAR ----------
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
 }
 
 // ---------- DECK MANAGEMENT ----------
@@ -341,7 +429,7 @@ function newDeck() {
     title: 'New Deck',
     created: Date.now(),
     slides: [
-      { type:'welcome', bg:'gradient', title:'Welcome', subtitle:'' },
+      { type:'welcome', bg:'dark', title:'Welcome', subtitle:'' },
     ],
   };
   App.decks.push(deck);
@@ -477,7 +565,7 @@ function renderThumbs() {
 }
 
 function getBgColor(bg) {
-  const map = { black:'#000', white:'#fff', gradient:'#1a1a3a', worship:'#1a1a4a', nature:'#0d4f3c' };
+  const map = { black:'#000', white:'#fff', dark:'#0a0a0f', worship:'#0d1a2e', nature:'#0d3b2e' };
   return map[bg] || '#000';
 }
 function getFgColor(bg) {
@@ -504,12 +592,12 @@ function addSlide(type='welcome') {
   const deck = getDeck();
   if (!deck) return;
   const templates = {
-    welcome: { type:'welcome', bg:'gradient', title:'New Welcome', subtitle:'' },
+    welcome: { type:'welcome', bg:'dark', title:'New Welcome', subtitle:'' },
     worship: { type:'worship', bg:'worship', title:'', lyrics:'' },
     verse: { type:'verse', bg:'black', verseRef:'', verseText:'' },
-    announcement: { type:'announcement', bg:'gradient', title:'Announcement', text:'' },
+    announcement: { type:'announcement', bg:'dark', title:'Announcement', text:'' },
     blank: { type:'blank', bg:'black' },
-    countdown: { type:'countdown', bg:'gradient', seconds:300 },
+    countdown: { type:'countdown', bg:'dark', seconds:300 },
     notification: { type:'notification', bg:'black', text:'' },
     image: { type:'image', bg:'black', url:'' },
     video: { type:'video', bg:'black', url:'' },
@@ -559,8 +647,8 @@ function openEditor(idx) {
   ];
 
   const bgOptions = [
-    ['black','Black'], ['white','White'], ['gradient','Purple Gradient'],
-    ['worship','Worship Blue'], ['nature','Nature Green'],
+    ['black','Black'], ['white','White'], ['dark','Dark'],
+    ['worship','Worship'], ['nature','Nature'],
   ];
 
   let html = `
@@ -909,7 +997,7 @@ function addBlankSlide() {
 function addCountdownSlide(seconds) {
   const deck = getDeck();
   if (!deck) return;
-  deck.slides.push({ type:'countdown', bg:'gradient', seconds });
+  deck.slides.push({ type:'countdown', bg:'dark', seconds });
   App.currentSlideIdx = deck.slides.length - 1;
   save(); renderAll();
 }
@@ -1560,10 +1648,10 @@ function finalizeSermon() {
   const slides = [];
 
   // Title slide
-  slides.push({ type:'welcome', bg:'gradient', title:data.outline.title, subtitle:data.outline.theme || data.topic });
+  slides.push({ type:'welcome', bg:'dark', title:data.outline.title, subtitle:data.outline.theme || data.topic });
 
   // Introduction
-  slides.push({ type:'announcement', bg:'bg-gradient', title:'Introduction', text:data.outline.introduction });
+  slides.push({ type:'announcement', bg:'dark', title:'Introduction', text:data.outline.introduction });
 
   // Scripture verses
   data.scriptures.forEach(s => {
@@ -1572,7 +1660,7 @@ function finalizeSermon() {
 
   // Main points
   data.outline.main_points.forEach((point, i) => {
-    slides.push({ type:'announcement', bg:'gradient', title:`Point ${i+1}: ${point.title}`, text:point.description });
+    slides.push({ type:'announcement', bg:'dark', title:`Point ${i+1}: ${point.title}`, text:point.description });
   });
 
   // Conclusion
@@ -1714,7 +1802,7 @@ async function generateDeck() {
   document.querySelector('#modalContent .btn-primary').textContent = ' Generating...';
   document.querySelector('#modalContent .btn-primary').disabled = true;
 
-  const systemPrompt = `You are a church presentation deck generator. Create a JSON array of slides for a church service. Each slide has: type (welcome, worship, verse, announcement, blank, countdown, notification), bg (black, white, gradient, worship, nature), and type-specific fields.
+  const systemPrompt = `You are a church presentation deck generator. Create a JSON array of slides for a church service. Each slide has: type (welcome, worship, verse, announcement, blank, countdown, notification), bg (black, white, dark, worship, nature), and type-specific fields.
 
 Slide types and their fields:
 - welcome: title, subtitle
@@ -1726,7 +1814,7 @@ Slide types and their fields:
 - notification: text
 
 Respond with ONLY a JSON array of slide objects. No markdown, no explanation. Example:
-[{"type":"welcome","bg":"gradient","title":"Welcome","subtitle":"We're glad you're here"},{"type":"worship","bg":"worship","title":"Amazing Grace","lyrics":"Amazing grace, how sweet the sound\\nThat saved a wretch like me"}]`;
+[{"type":"welcome","bg":"dark","title":"Welcome","subtitle":"We're glad you're here"},{"type":"worship","bg":"worship","title":"Amazing Grace","lyrics":"Amazing grace, how sweet the sound\\nThat saved a wretch like me"}]`;
 
   try {
     let apiResult;
@@ -1956,6 +2044,7 @@ const observer = new MutationObserver(() => {
   }
 });
 observer.observe(document.getElementById('slideCanvas'), { childList:true, subtree:true });
+
 </script>
 </body>
 </html>
