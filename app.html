@@ -1,1958 +1,1962 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CrossPresenter — Luther's Code</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0a0a1a">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<style>
-/* ========== RESET & BASE ========== */
-* { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --bg:#0a0a1a; --bg2:#12122a; --bg3:#1a1a3a;
-  --text:#e8e8ff; --text2:#a0a0c0; --text3:#606080;
-  --accent:#6c5ce7; --accent2:#a29bfe; --accent3:#00cec9;
-  --success:#00b894; --danger:#e74c3c; --warn:#fdcb6e;
-  --border:#2a2a4a; --radius:12px;
-}
-html,body { height:100%; overflow:hidden; }
-body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:14px; }
-input,textarea,select { font-family:inherit; }
-
-/* ========== LAYOUT ========== */
-.app { display:flex; height:100vh; }
-.sidebar { width:320px; min-width:320px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
-.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-
-/* ========== SIDEBAR ========== */
-.sidebar-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-.logo { font-size:20px; font-weight:700; background:linear-gradient(135deg,var(--accent2),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.logo-sub { font-size:11px; color:var(--text3); }
-
-.deck-list { flex:1; overflow-y:auto; padding:8px; }
-.deck-item { padding:12px; border-radius:8px; cursor:pointer; margin-bottom:4px; transition:background .15s; }
-.deck-item:hover { background:var(--bg3); }
-.deck-item.active { background:var(--accent); }
-.deck-item-title { font-weight:600; font-size:13px; }
-.deck-item-meta { font-size:11px; color:var(--text3); margin-top:2px; }
-
-.sidebar-actions { padding:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
-
-/* ========== BUTTONS ========== */
-.btn { padding:10px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
-.btn-primary { background:var(--accent); color:#fff; }
-.btn-primary:hover { background:var(--accent2); }
-.btn-secondary { background:var(--bg3); color:var(--text); }
-.btn-secondary:hover { background:var(--border); }
-.btn-success { background:var(--success); color:#fff; }
-.btn-danger { background:var(--danger); color:#fff; }
-.btn-sm { padding:6px 12px; font-size:12px; }
-.btn-icon { width:36px; height:36px; padding:0; border-radius:8px; }
-.btn:disabled { opacity:.4; cursor:not-allowed; }
-
-/* ========== TOP BAR ========== */
-.topbar { height:56px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:12px; }
-.topbar-title { font-weight:600; font-size:15px; flex:1; }
-.topbar-controls { display:flex; gap:8px; align-items:center; }
-
-/* ========== PREVIEW AREA ========== */
-.preview-area { flex:1; display:flex; align-items:center; justify-content:center; background:#000; position:relative; overflow:hidden; }
-.preview-frame { width:100%; height:100%; position:relative; }
-.slide-canvas { width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:absolute; top:0; left:0; }
-
-/* ========== SLIDE STYLES ========== */
-.slide { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:absolute; opacity:0; transition:opacity .3s; padding:8%; text-align:center; }
-.slide.active { opacity:1; z-index:2; }
-.slide.bg-black { background:#000; }
-.slide.bg-white { background:#fff; color:#000; }
-.slide.bg-gradient { background:linear-gradient(135deg,#1a1a3a,#0a0a1a); }
-.slide.bg-worship { background:linear-gradient(180deg,#0a0a2a 0%,#1a1a4a 50%,#0a0a2a 100%); }
-.slide.bg-nature { background:linear-gradient(135deg,#0d4f3c,#1a7a5a); }
-
-.slide h1 { font-size:clamp(2rem,6vw,5rem); font-weight:800; line-height:1.2; margin-bottom:.3em; }
-.slide h2 { font-size:clamp(1.5rem,4vw,3rem); font-weight:600; line-height:1.3; }
-.slide p { font-size:clamp(1rem,2.5vw,2rem); line-height:1.5; max-width:80%; }
-.slide .verse-ref { font-size:clamp(.9rem,2vw,1.5rem); font-style:italic; opacity:.7; margin-top:.5em; }
-.slide .lyrics { font-size:clamp(1.2rem,3.5vw,2.8rem); line-height:1.8; white-space:pre-line; font-weight:600; }
-.slide .countdown { font-size:clamp(3rem,15vw,10rem); font-weight:900; font-variant-numeric:tabular-nums; }
-.slide .notification { font-size:clamp(1.5rem,5vw,4rem); font-weight:700; padding:1em; }
-
-/* ========== EDITOR PANEL ========== */
-.editor-panel { position:absolute; top:0; right:0; width:380px; height:100%; background:var(--bg2); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .3s; z-index:100; display:flex; flex-direction:column; }
-.editor-panel.open { transform:translateX(0); }
-.editor-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.editor-body { flex:1; overflow-y:auto; padding:16px; }
-.editor-field { margin-bottom:16px; }
-.editor-field label { display:block; font-size:12px; color:var(--text2); margin-bottom:6px; font-weight:600; }
-.editor-field input, .editor-field textarea, .editor-field select { width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; }
-.editor-field textarea { min-height:100px; resize:vertical; }
-.slide-type-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
-.slide-type-btn { padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; cursor:pointer; text-align:center; font-size:12px; transition:all .15s; }
-.slide-type-btn:hover, .slide-type-btn.selected { border-color:var(--accent); background:var(--bg3); }
-
-/* ========== THUMBNAIL STRIP ========== */
-.thumb-strip { height:120px; min-height:120px; background:var(--bg2); border-top:1px solid var(--border); display:flex; align-items:center; padding:8px; gap:8px; overflow-x:auto; }
-.thumb { min-width:180px; width:180px; height:100px; background:var(--bg3); border:2px solid transparent; border-radius:8px; cursor:pointer; position:relative; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:8px; text-align:center; }
-.thumb:hover { border-color:var(--accent2); }
-.thumb.active { border-color:var(--accent); }
-.thumb-number { position:absolute; top:4px; left:6px; font-size:10px; color:var(--text3); font-weight:700; }
-.thumb-delete { position:absolute; top:4px; right:6px; width:18px; height:18px; border-radius:50%; background:var(--danger); color:#fff; font-size:10px; display:none; align-items:center; justify-content:center; cursor:pointer; }
-.thumb:hover .thumb-delete { display:flex; }
-.thumb-title { font-size:11px; font-weight:600; line-height:1.3; word-break:break-word; }
-
-/* ========== MODALS ========== */
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:1000; }
-.modal-overlay.show { display:flex; }
-.modal { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; }
-.modal h2 { margin-bottom:16px; font-size:18px; }
-.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
-
-/* ========== AI BUILDER ========== */
-.ai-builder { }
-.ai-builder textarea { width:100%; min-height:100px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; resize:vertical; }
-.ai-presets { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-.ai-preset { padding:6px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:20px; font-size:12px; cursor:pointer; }
-.ai-preset:hover { border-color:var(--accent); }
-
-/* ========== VOICE COMMAND BAR ========== */
-.voice-bar { position:fixed; bottom:140px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:200; }
-.voice-indicator { padding:8px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:30px; display:none; align-items:center; gap:8px; font-size:13px; }
-.voice-indicator.show { display:flex; }
-.voice-indicator.listening { border-color:var(--success); }
-.voice-indicator .dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
-
-/* ========== SCRIPTURE DETECTION QUEUE ========== */
-.detection-panel { position:absolute; bottom:132px; right:16px; width:360px; max-height:400px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; z-index:150; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.5); transition:transform .3s, opacity .3s; }
-.detection-panel.hidden-panel { transform:translateY(20px); opacity:0; pointer-events:none; }
-.detection-header { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--bg3); }
-.detection-header-title { font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; }
-.detection-header-title .pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1s infinite; }
-.detection-list { flex:1; overflow-y:auto; padding:8px; }
-.detection-empty { text-align:center; padding:24px 12px; color:var(--text3); font-size:12px; }
-.detection-item { display:flex; align-items:center; padding:10px; border-radius:8px; margin-bottom:6px; background:var(--bg3); border:1px solid var(--border); transition:all .2s; animation:slideIn .3s; }
-@keyframes slideIn { from{transform:translateX(20px);opacity:0;} to{transform:translateX(0);opacity:1;} }
-.detection-item.high { border-left:3px solid var(--success); }
-.detection-item.med { border-left:3px solid var(--warn); }
-.detection-item.low { border-left:3px solid var(--text3); }
-.detection-item .det-ref { font-weight:700; font-size:14px; flex:1; }
-.detection-item .det-confidence { font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:600; }
-.detection-item .det-confidence.high { background:var(--success); color:#fff; }
-.detection-item .det-confidence.med { background:var(--warn); color:#000; }
-.detection-item .det-confidence.low { background:var(--text3); color:#fff; }
-.detection-item .det-actions { display:flex; gap:4px; margin-left:8px; }
-.detection-item .det-btn { width:28px; height:28px; border-radius:6px; border:none; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; }
-.detection-item .det-btn.send { background:var(--success); color:#fff; }
-.detection-item .det-btn.dismiss { background:var(--danger); color:#fff; }
-.detection-item .det-btn.preview { background:var(--accent); color:#fff; }
-.detection-item .det-preview-text { font-size:11px; color:var(--text2); margin-top:4px; line-height:1.4; max-height:40px; overflow:hidden; text-overflow:ellipsis; }
-.detection-footer { padding:8px 14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text3); }
-.detection-mode-toggle { display:flex; align-items:center; gap:6px; cursor:pointer; }
-.detection-mode-toggle .toggle { transform:scale(.8); }
-
-/* ========== LIVE TRANSCRIPT ========== */
-.transcript-overlay { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); max-width:80%; padding:8px 16px; background:rgba(0,0,0,.7); border-radius:8px; font-size:13px; color:var(--text2); z-index:10; display:none; text-align:center; }
-.transcript-overlay.show { display:block; }
-.transcript-overlay .highlight { color:var(--accent3); font-weight:600; }
-
-/* ========== STATUS ========== */
-.status-overlay { position:absolute; top:12px; left:12px; background:rgba(0,0,0,.6); padding:6px 12px; border-radius:6px; font-size:12px; color:var(--text2); display:flex; gap:12px; align-items:center; z-index:10; }
-.status-overlay .live-dot { width:6px; height:6px; border-radius:50%; background:var(--danger); }
-
-/* ========== SETTINGS ========== */
-.settings-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
-.settings-row:last-child { border:none; }
-.toggle { width:44px; height:24px; background:var(--bg); border-radius:12px; position:relative; cursor:pointer; border:1px solid var(--border); }
-.toggle.on { background:var(--success); }
-.toggle::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition:transform .2s; }
-.toggle.on::after { transform:translateX(20px); }
-
-/* ========== UTIL ========== */
-.hidden { display:none !important; }
-.fade-in { animation:fadeIn .3s; }
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-</style>
-</head>
-<body>
-
-<div class="app">
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <div>
-        <div class="logo">✝ CrossPresenter</div>
-        <div class="logo-sub">AI Church Presentation</div>
-      </div>
-    </div>
-    <div class="deck-list" id="deckList"></div>
-    <div class="sidebar-actions">
-      <button class="btn btn-primary" onclick="openAIBuilder()">🤖 Build with AI</button>
-      <button class="btn btn-secondary" onclick="openSermonPrep()">📖 Sermon Prep</button>
-      <button class="btn btn-secondary" onclick="newDeck()">📋 New Deck</button>
-      <button class="btn btn-secondary" onclick="openSettings()">⚙️ Settings</button>
-    </div>
-  </div>
-
-  <!-- MAIN -->
-  <div class="main">
-    <div class="topbar">
-      <div class="topbar-title" id="topbarTitle">No deck selected</div>
-      <div class="topbar-controls">
-        <button class="btn btn-sm btn-secondary" id="voiceBtn" onclick="toggleVoice()">🎤 Voice + AI</button>
-        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()">✏️ Edit</button>
-        <button class="btn btn-sm btn-success" onclick="present()">🖥️ Present</button>
-      </div>
-    </div>
-
-    <div class="preview-area" id="previewArea">
-      <div class="status-overlay" id="statusOverlay">
-        <span class="live-dot hidden" id="liveDot"></span>
-        <span id="statusText">Ready</span>
-        <span id="slideCounter">0 / 0</span>
-      </div>
-      <div class="preview-frame" id="previewFrame">
-        <div class="slide-canvas" id="slideCanvas">
-          <div style="text-align:center;color:var(--text3);">
-            <h2 style="font-size:2rem;margin-bottom:.5em;">Welcome to CrossPresenter</h2>
-            <p>Select or create a deck to get started</p>
-            <p style="margin-top:1em;font-size:.9rem;">Try "Build with AI" to generate a service in seconds</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Voice indicator -->
-      <div class="voice-bar">
-        <div class="voice-indicator" id="voiceIndicator">
-          <div class="dot"></div>
-          <span id="voiceText">Listening...</span>
-        </div>
-      </div>
-
-      <!-- Scripture Detection Queue -->
-      <div class="detection-panel hidden-panel" id="detectionPanel">
-        <div class="detection-header">
-          <div class="detection-header-title">
-            <span class="pulse-dot" id="detectionPulse"></span>
-            AI Scripture Detection
-          </div>
-          <button class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="clearDetectionQueue()">Clear</button>
-        </div>
-        <div class="detection-list" id="detectionList">
-          <div class="detection-empty" id="detectionEmpty">No scriptures detected yet.<br>Start speaking to see AI detection in action.</div>
-        </div>
-        <div class="detection-footer">
-          <div class="detection-mode-toggle" onclick="toggleAutoDisplay()">
-            <div class="toggle" id="autoDisplayToggle"></div>
-            <span>Auto-display detected verses</span>
-          </div>
-          <span id="detectionCount">0 detected</span>
-        </div>
-      </div>
-
-      <!-- Live Transcript Overlay -->
-      <div class="transcript-overlay" id="transcriptOverlay"></div>
-    </div>
-
-    <!-- Thumbnail strip -->
-    <div class="thumb-strip" id="thumbStrip"></div>
-
-    <!-- Editor Panel -->
-    <div class="editor-panel" id="editorPanel">
-      <div class="editor-header">
-        <h2 style="font-size:16px;">Edit Slide</h2>
-        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()">✕</button>
-      </div>
-      <div class="editor-body" id="editorBody"></div>
-    </div>
-  </div>
-</div>
-
-<!-- MODALS -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modalContent"></div>
-</div>
-
-<script>
-// ============================================================
-// CROSSPRESENTER — AI Church Presentation PWA
-// ============================================================
-
-const App = {
-  decks: [],
-  currentDeckId: null,
-  currentSlideIdx: 0,
-  isPresenting: false,
-  voiceListening: false,
-  settings: {
-    bibleVersion: 'KJV',
-    aiApiKey: '',
-    aiProvider: 'openai',
-    autoAdvance: false,
-    voiceCommands: true,
-  },
-  recognition: null,
-  bibleCache: {},
-};
-
-// ---------- PERSISTENCE ----------
-function save() {
-  localStorage.setItem('crosspresenter', JSON.stringify({
-    decks: App.decks,
-    settings: App.settings,
-  }));
-}
-
-function load() {
-  const raw = localStorage.getItem('crosspresenter');
-  if (raw) {
-    const data = JSON.parse(raw);
-    App.decks = data.decks || [];
-    if (data.settings) Object.assign(App.settings, data.settings);
-  }
-  if (App.decks.length === 0) {
-    createDemoDeck();
-  }
-}
-
-function createDemoDeck() {
-  const deck = {
-    id: 'demo-' + Date.now(),
-    title: 'Sunday Service — Demo',
-    created: Date.now(),
-    slides: [
-      { type:'welcome', bg:'gradient', title:'Welcome to Church', subtitle:'We\'re glad you\'re here' },
-      { type:'worship', bg:'worship', lyrics:'How great is our God\nSing with me\nHow great is our God', title:'How Great Is Our God' },
-      { type:'verse', bg:'black', verseRef:'John 3:16', verseText:'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.' },
-      { type:'announcement', bg:'gradient', title:'Upcoming Events', text:'Wednesday Bible Study — 7pm\nFriday Youth Night — 6pm\nSunday Service — 10am' },
-      { type:'blank', bg:'black' },
-    ],
-  };
-  App.decks.push(deck);
-  App.currentDeckId = deck.id;
-  save();
-}
-
-// ---------- DECK MANAGEMENT ----------
-function newDeck() {
-  const deck = {
-    id: 'deck-' + Date.now(),
-    title: 'New Deck',
-    created: Date.now(),
-    slides: [
-      { type:'welcome', bg:'gradient', title:'Welcome', subtitle:'' },
-    ],
-  };
-  App.decks.push(deck);
-  App.currentDeckId = deck.id;
-  App.currentSlideIdx = 0;
-  save();
-  renderAll();
-}
-
-function getDeck() { return App.decks.find(d => d.id === App.currentDeckId); }
-
-function deleteDeck(id) {
-  App.decks = App.decks.filter(d => d.id !== id);
-  if (App.currentDeckId === id) App.currentDeckId = App.decks[0]?.id || null;
-  save();
-  renderAll();
-}
-
-// ---------- SLIDE RENDERING ----------
-function renderSlide(slide, container) {
-  const div = document.createElement('div');
-  div.className = `slide bg-${slide.bg || 'black'}`;
-
-  switch(slide.type) {
-    case 'welcome':
-      div.innerHTML = `<h1>${esc(slide.title || '')}</h1><p style="margin-top:.5em;opacity:.8;">${esc(slide.subtitle || '')}</p>`;
-      break;
-    case 'worship':
-      div.innerHTML = slide.title ? `<h2 style="margin-bottom:.3em;">${esc(slide.title)}</h2>` : '';
-      div.innerHTML += `<div class="lyrics">${esc(slide.lyrics || '')}</div>`;
-      break;
-    case 'verse':
-      div.innerHTML = `<p>${esc(slide.verseText || 'Loading verse...')}</p><div class="verse-ref">— ${esc(slide.verseRef || '')}</div>`;
-      break;
-    case 'announcement':
-      div.innerHTML = `<h2 style="margin-bottom:.5em;">${esc(slide.title || '')}</h2><p style="white-space:pre-line;">${esc(slide.text || '')}</p>`;
-      break;
-    case 'countdown':
-      div.innerHTML = `<div class="countdown" id="countdownEl">${formatCountdown(slide.seconds || 300)}</div>`;
-      break;
-    case 'notification':
-      div.innerHTML = `<div class="notification">${esc(slide.text || '')}</div>`;
-      break;
-    case 'image':
-      div.innerHTML = slide.url ? `<img src="${slide.url}" style="max-width:100%;max-height:100%;object-fit:contain;">` : `<p>Image slide</p>`;
-      break;
-    case 'video':
-      div.innerHTML = slide.url ? `<video src="${slide.url}" autoplay loop style="max-width:100%;max-height:100%;"></video>` : `<p>Video slide</p>`;
-      break;
-    case 'blank':
-    default:
-      break;
-  }
-
-  container.appendChild(div);
-  return div;
-}
-
-function renderCurrentSlide() {
-  const deck = getDeck();
-  const canvas = document.getElementById('slideCanvas');
-  canvas.innerHTML = '';
-
-  if (!deck || !deck.slides.length) {
-    canvas.innerHTML = `<div style="text-align:center;color:var(--text3);"><p>This deck has no slides</p><button class="btn btn-primary" style="margin-top:1em;" onclick="addSlide()">Add Slide</button></div>`;
-    updateStatus();
-    return;
-  }
-
-  deck.slides.forEach((slide, i) => {
-    const el = renderSlide(slide, canvas);
-    if (i === App.currentSlideIdx) el.classList.add('active');
-  });
-
-  updateStatus();
-}
-
-function goToSlide(idx) {
-  const deck = getDeck();
-  if (!deck) return;
-  App.currentSlideIdx = Math.max(0, Math.min(idx, deck.slides.length - 1));
-  renderCurrentSlide();
-  renderThumbs();
-  save();
-}
-
-function nextSlide() { goToSlide(App.currentSlideIdx + 1); }
-function prevSlide() { goToSlide(App.currentSlideIdx - 1); }
-
-// ---------- STATUS ----------
-function updateStatus() {
-  const deck = getDeck();
-  const counter = document.getElementById('slideCounter');
-  const title = document.getElementById('topbarTitle');
-  if (deck) {
-    counter.textContent = `${App.currentSlideIdx + 1} / ${deck.slides.length}`;
-    title.textContent = deck.title;
-  } else {
-    counter.textContent = '0 / 0';
-    title.textContent = 'No deck selected';
-  }
-}
-
-// ---------- THUMBNAILS ----------
-function renderThumbs() {
-  const deck = getDeck();
-  const strip = document.getElementById('thumbStrip');
-  strip.innerHTML = '';
-
-  if (!deck) return;
-
-  // Add slide button
-  const addBtn = document.createElement('div');
-  addBtn.className = 'thumb';
-  addBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--accent2);';
-  addBtn.innerHTML = '+';
-  addBtn.onclick = () => addSlide();
-  strip.appendChild(addBtn);
-
-  deck.slides.forEach((slide, i) => {
-    const thumb = document.createElement('div');
-    thumb.className = 'thumb' + (i === App.currentSlideIdx ? ' active' : '');
-    thumb.style.background = getBgColor(slide.bg);
-    thumb.innerHTML = `
-      <span class="thumb-number">${i + 1}</span>
-      <span class="thumb-delete" onclick="event.stopPropagation();deleteSlide(${i})">✕</span>
-      <span class="thumb-title" style="color:${getFgColor(slide.bg)}">${getThumbTitle(slide)}</span>
-    `;
-    thumb.onclick = () => goToSlide(i);
-    thumb.ondblclick = () => { goToSlide(i); openEditor(i); };
-    strip.appendChild(thumb);
-  });
-}
-
-function getBgColor(bg) {
-  const map = { black:'#000', white:'#fff', gradient:'#1a1a3a', worship:'#1a1a4a', nature:'#0d4f3c' };
-  return map[bg] || '#000';
-}
-function getFgColor(bg) {
-  return bg === 'white' ? '#000' : '#fff';
-}
-function getThumbTitle(slide) {
-  switch(slide.type) {
-    case 'welcome': return slide.title || 'Welcome';
-    case 'worship': return slide.title || 'Worship';
-    case 'verse': return slide.verseRef || 'Verse';
-    case 'announcement': return slide.title || 'Announcement';
-    case 'countdown': return '⏱ Countdown';
-    case 'notification': return slide.text || 'Notification';
-    case 'image': return '🖼 Image';
-    case 'video': return '🎬 Video';
-    case 'blank': return '— Blank —';
-    default: return 'Slide';
-  }
-}
-
-// ---------- SLIDE MANAGEMENT ----------
-function addSlide(type='welcome') {
-  const deck = getDeck();
-  if (!deck) return;
-  const templates = {
-    welcome: { type:'welcome', bg:'gradient', title:'New Welcome', subtitle:'' },
-    worship: { type:'worship', bg:'worship', title:'', lyrics:'' },
-    verse: { type:'verse', bg:'black', verseRef:'', verseText:'' },
-    announcement: { type:'announcement', bg:'gradient', title:'Announcement', text:'' },
-    blank: { type:'blank', bg:'black' },
-    countdown: { type:'countdown', bg:'gradient', seconds:300 },
-    notification: { type:'notification', bg:'black', text:'' },
-    image: { type:'image', bg:'black', url:'' },
-    video: { type:'video', bg:'black', url:'' },
-  };
-  deck.slides.push(templates[type] || templates.welcome);
-  App.currentSlideIdx = deck.slides.length - 1;
-  save();
-  renderAll();
-  openEditor(App.currentSlideIdx);
-}
-
-function deleteSlide(idx) {
-  const deck = getDeck();
-  if (!deck) return;
-  deck.slides.splice(idx, 1);
-  if (App.currentSlideIdx >= deck.slides.length) App.currentSlideIdx = deck.slides.length - 1;
-  if (App.currentSlideIdx < 0) App.currentSlideIdx = 0;
-  save();
-  renderAll();
-}
-
-// ---------- EDITOR ----------
-let editingSlideIdx = null;
-
-function toggleEditor() {
-  const panel = document.getElementById('editorPanel');
-  if (panel.classList.contains('open')) {
-    panel.classList.remove('open');
-  } else {
-    if (editingSlideIdx === null) editingSlideIdx = App.currentSlideIdx;
-    openEditor(editingSlideIdx);
-  }
-}
-
-function openEditor(idx) {
-  const deck = getDeck();
-  if (!deck || idx === null || idx === undefined || idx < 0 || idx >= deck.slides.length) return;
-  editingSlideIdx = idx;
-  const slide = deck.slides[idx];
-  const body = document.getElementById('editorBody');
-
-  const typeOptions = [
-    ['welcome','👋 Welcome'], ['worship','🎵 Worship'], ['verse','📖 Verse'],
-    ['announcement','📢 Announcement'], ['blank','⬛ Blank'],
-    ['countdown','⏱ Countdown'], ['notification','🔔 Notification'],
-    ['image','🖼 Image'], ['video','🎬 Video'],
-  ];
-
-  const bgOptions = [
-    ['black','Black'], ['white','White'], ['gradient','Purple Gradient'],
-    ['worship','Worship Blue'], ['nature','Nature Green'],
-  ];
-
-  let html = `
-    <div class="editor-field">
-      <label>Slide Type</label>
-      <div class="slide-type-grid">
-        ${typeOptions.map(([val,label]) =>
-          `<div class="slide-type-btn ${slide.type===val?'selected':''}" onclick="changeSlideType('${val}')">${label}</div>`
-        ).join('')}
-      </div>
-    </div>
-    <div class="editor-field">
-      <label>Background</label>
-      <select onchange="updateSlideField('bg', this.value)">
-        ${bgOptions.map(([val,label]) => `<option value="${val}" ${slide.bg===val?'selected':''}>${label}</option>`).join('')}
-      </select>
-    </div>
-  `;
-
-  // Type-specific fields
-  switch(slide.type) {
-    case 'welcome':
-      html += textField('title','Title',slide.title);
-      html += textField('subtitle','Subtitle',slide.subtitle);
-      break;
-    case 'worship':
-      html += textField('title','Song Title',slide.title);
-      html += textAreaField('lyrics','Lyrics (one line per slide phrase)',slide.lyrics);
-      break;
-    case 'verse':
-      html += textField('verseRef','Verse Reference',slide.verseRef);
-      html += `<button class="btn btn-sm btn-primary" style="margin-bottom:12px;" onclick="lookupVerse()">📖 Fetch Verse from Bible API</button>`;
-      html += textAreaField('verseText','Verse Text',slide.verseText);
-      break;
-    case 'announcement':
-      html += textField('title','Title',slide.title);
-      html += textAreaField('text','Content',slide.text);
-      break;
-    case 'countdown':
-      html += numberField('seconds','Duration (seconds)',slide.seconds||300);
-      break;
-    case 'notification':
-      html += textAreaField('text','Message',slide.text);
-      break;
-    case 'image':
-    case 'video':
-      html += textField('url','Media URL',slide.url);
-      break;
-  }
-
-  html += `
-    <div style="margin-top:20px;display:flex;gap:8px;">
-      <button class="btn btn-sm btn-danger" onclick="deleteSlide(${idx});closeEditor()">🗑 Delete</button>
-      <button class="btn btn-sm btn-secondary" onclick="duplicateSlide(${idx})">📋 Duplicate</button>
-    </div>
-  `;
-
-  body.innerHTML = html;
-  document.getElementById('editorPanel').classList.add('open');
-}
-
-function closeEditor() {
-  document.getElementById('editorPanel').classList.remove('open');
-  editingSlideIdx = null;
-}
-
-function changeSlideType(type) {
-  if (editingSlideIdx === null) return;
-  const deck = getDeck();
-  const slide = deck.slides[editingSlideIdx];
-  slide.type = type;
-  // Initialize missing fields
-  const defaults = {
-    title:'', subtitle:'', lyrics:'', verseRef:'', verseText:'',
-    text:'', url:'', seconds:300,
-  };
-  Object.keys(defaults).forEach(k => { if (!(k in slide)) slide[k] = defaults[k]; });
-  save();
-  openEditor(editingSlideIdx);
-  renderCurrentSlide();
-  renderThumbs();
-}
-
-function updateSlideField(field, value) {
-  if (editingSlideIdx === null) return;
-  const deck = getDeck();
-  deck.slides[editingSlideIdx][field] = value;
-  save();
-  renderCurrentSlide();
-  renderThumbs();
-}
-
-function duplicateSlide(idx) {
-  const deck = getDeck();
-  const copy = JSON.parse(JSON.stringify(deck.slides[idx]));
-  deck.slides.splice(idx + 1, 0, copy);
-  App.currentSlideIdx = idx + 1;
-  editingSlideIdx = idx + 1;
-  save();
-  renderAll();
-  openEditor(idx + 1);
-}
-
-// Editor field helpers
-function textField(field, label, value) {
-  return `<div class="editor-field"><label>${label}</label><input type="text" value="${esc(value||'')}" onchange="updateSlideField('${field}',this.value)"></div>`;
-}
-function textAreaField(field, label, value) {
-  return `<div class="editor-field"><label>${label}</label><textarea onchange="updateSlideField('${field}',this.value)">${esc(value||'')}</textarea></div>`;
-}
-function numberField(field, label, value) {
-  return `<div class="editor-field"><label>${label}</label><input type="number" value="${value||''}" onchange="updateSlideField('${field}',parseInt(this.value))"></div>`;
-}
-
-// ---------- DECK LIST ----------
-function renderDeckList() {
-  const list = document.getElementById('deckList');
-  list.innerHTML = '';
-  App.decks.forEach(deck => {
-    const item = document.createElement('div');
-    item.className = 'deck-item' + (deck.id === App.currentDeckId ? ' active' : '');
-    const date = new Date(deck.created).toLocaleDateString();
-    item.innerHTML = `
-      <div class="deck-item-title">${esc(deck.title)}</div>
-      <div class="deck-item-meta">${deck.slides.length} slides · ${date}</div>
-    `;
-    item.onclick = () => {
-      App.currentDeckId = deck.id;
-      App.currentSlideIdx = 0;
-      editingSlideIdx = null;
-      renderAll();
-    };
-    item.oncontextmenu = (e) => { e.preventDefault(); renameDeck(deck.id); };
-    list.appendChild(item);
-  });
-}
-
-function renameDeck(id) {
-  const deck = App.decks.find(d => d.id === id);
-  const name = prompt('Deck name:', deck.title);
-  if (name) { deck.title = name; save(); renderDeckList(); updateStatus(); }
-}
-
-// ---------- BIBLE API ----------
-async function lookupVerse() {
-  const deck = getDeck();
-  if (!deck || editingSlideIdx === null) return;
-  const slide = deck.slides[editingSlideIdx];
-  if (!slide.verseRef) { alert('Enter a verse reference first'); return; }
-
-  const ref = slide.verseRef.trim().replace(/\s+/g, '+');
-  const version = App.settings.bibleVersion || 'KJV';
-  const cacheKey = `${ref}-${version}`;
-
-  if (App.bibleCache[cacheKey]) {
-    slide.verseText = App.bibleCache[cacheKey];
-    save(); renderCurrentSlide(); openEditor(editingSlideIdx);
-    return;
-  }
-
-  try {
-    const resp = await fetch(`https://bible-api.com/${ref}?translation=${version}`);
-    const data = await resp.json();
-    if (data.text) {
-      slide.verseText = data.text.trim();
-      App.bibleCache[cacheKey] = slide.verseText;
-      save(); renderCurrentSlide(); openEditor(editingSlideIdx);
-    } else {
-      alert('Verse not found');
-    }
-  } catch(e) {
-    alert('Failed to fetch verse: ' + e.message);
-  }
-}
-
-// Quick verse lookup from voice/command
-async function quickVerse(ref) {
-  const deck = getDeck();
-  if (!deck) return;
-  const refEncoded = ref.trim().replace(/\s+/g, '+');
-  const version = App.settings.bibleVersion || 'KJV';
-  const cacheKey = `${refEncoded}-${version}`;
-
-  let text;
-  if (App.bibleCache[cacheKey]) {
-    text = App.bibleCache[cacheKey];
-  } else {
-    const resp = await fetch(`https://bible-api.com/${refEncoded}?translation=${version}`);
-    const data = await resp.json();
-    text = data.text?.trim();
-    if (text) App.bibleCache[cacheKey] = text;
-  }
-
-  if (text) {
-    const slide = { type:'verse', bg:'black', verseRef:ref, verseText:text };
-    deck.slides.push(slide);
-    App.currentSlideIdx = deck.slides.length - 1;
-    save(); renderAll();
-    flashStatus(`📖 ${ref} added`);
-  } else {
-    flashStatus('❌ Verse not found: ' + ref);
-  }
-}
-
-// ---------- VOICE COMMANDS ----------
-function toggleVoice() {
-  if (App.voiceListening) {
-    stopVoice();
-  } else {
-    startVoice();
-  }
-}
-
-function startVoice() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    alert('Voice recognition not supported in this browser. Try Chrome or Edge.');
-    return;
-  }
-
-  App.recognition = new SR();
-  App.recognition.continuous = true;
-  App.recognition.interimResults = false;
-  App.recognition.lang = 'en-US';
-
-  App.recognition.onresult = (event) => {
-    const transcript = event.results[event.results.length - 1][0].transcript.trim();
-    console.log('Voice:', transcript);
-    const lower = transcript.toLowerCase();
-
-    // Show live transcript overlay
-    showTranscript(transcript);
-
-    // 1. Run scripture detection on everything spoken
-    const detections = detectScriptures(transcript);
-
-    // 2. Check for explicit voice commands
-    if (!isCommand(lower, detections)) {
-      // Not a command — feed to scripture detection
-      if (detections.length > 0) {
-        detections.forEach(d => addToDetectionQueue(d));
-      }
-    } else {
-      handleVoiceCommand(lower);
-    }
-  };
-
-  App.recognition.onerror = (e) => {
-    console.error('Voice error:', e.error);
-    if (e.error === 'not-allowed') {
-      alert('Microphone access denied. Please allow microphone access in your browser settings.');
-      stopVoice();
-    }
-  };
-
-  App.recognition.onend = () => {
-    if (App.voiceListening) {
-      try { App.recognition.start(); } catch(e) {}
-    }
-  };
-
-  try {
-    App.recognition.start();
-    App.voiceListening = true;
-    document.getElementById('voiceBtn').textContent = '🔴 Listening';
-    document.getElementById('voiceBtn').classList.add('btn-danger');
-    document.getElementById('voiceBtn').classList.remove('btn-secondary');
-    document.getElementById('voiceIndicator').classList.add('show', 'listening');
-    document.getElementById('voiceText').textContent = 'Listening for commands...';
-    // Show scripture detection panel
-    document.getElementById('detectionPanel').classList.remove('hidden-panel');
-    document.getElementById('detectionPulse').style.display = 'inline-block';
-    flashStatus('🎤 Voice + Scripture Detection active');
-  } catch(e) {
-    console.error(e);
-  }
-}
-
-function stopVoice() {
-  App.voiceListening = false;
-  if (App.recognition) {
-    App.recognition.onend = null;
-    App.recognition.stop();
-    App.recognition = null;
-  }
-  document.getElementById('voiceBtn').textContent = '🎤 Voice + AI';
-  document.getElementById('voiceBtn').classList.remove('btn-danger');
-  document.getElementById('voiceBtn').classList.add('btn-secondary');
-  document.getElementById('voiceIndicator').classList.remove('show', 'listening');
-  document.getElementById('detectionPanel').classList.add('hidden-panel');
-  document.getElementById('transcriptOverlay').classList.remove('show');
-  flashStatus('Voice commands off');
-}
-
-function handleVoiceCommand(transcript) {
-  document.getElementById('voiceText').textContent = `"${transcript}"`;
-
-  // Command patterns
-  const versePattern = /(?:bring up|show|display|pull up|go to)\s+([\w\s]+\d+:\d+(?:-\d+)?)/i;
-  const versePattern2 = /^([\w\s]+\d+:\d+(?:-\d+)?)$/i;
-
-  if (/next (?:slide )?please|next slide|go next|advance/i.test(transcript)) {
-    nextSlide();
-    flashStatus('▶ Next slide');
-  } else if (/previous|go back|last slide|back/i.test(transcript)) {
-    prevSlide();
-    flashStatus('◀ Previous slide');
-  } else if (/blank|black screen|clear/i.test(transcript)) {
-    addBlankSlide();
-    flashStatus('⬛ Blank screen');
-  } else if (/first slide|go to start|beginning/i.test(transcript)) {
-    goToSlide(0);
-    flashStatus('⏮ First slide');
-  } else if (/last slide|go to end|final slide/i.test(transcript)) {
-    const deck = getDeck();
-    if (deck) goToSlide(deck.slides.length - 1);
-    flashStatus('⏭ Last slide');
-  } else if (versePattern.test(transcript)) {
-    const match = transcript.match(versePattern);
-    quickVerse(match[1]);
-  } else if (versePattern2.test(transcript)) {
-    const match = transcript.match(versePattern2);
-    quickVerse(match[1]);
-  } else if (/countdown|timer/i.test(transcript)) {
-    const secondsMatch = transcript.match(/(\d+)\s*(?:minute|min|second|sec)/i);
-    const seconds = secondsMatch ? parseTimeStr(secondsMatch[0]) : 300;
-    addCountdownSlide(seconds);
-    flashStatus('⏱ Countdown added');
-  } else if (/announcement/i.test(transcript)) {
-    addSlide('announcement');
-    flashStatus('📢 Announcement slide');
-  } else {
-    console.log('Unrecognized command:', transcript);
-    flashStatus(`🤔 Didn't catch: "${transcript}"`);
-  }
-}
-
-function addBlankSlide() {
-  const deck = getDeck();
-  if (!deck) return;
-  deck.slides.push({ type:'blank', bg:'black' });
-  App.currentSlideIdx = deck.slides.length - 1;
-  save(); renderAll();
-}
-
-function addCountdownSlide(seconds) {
-  const deck = getDeck();
-  if (!deck) return;
-  deck.slides.push({ type:'countdown', bg:'gradient', seconds });
-  App.currentSlideIdx = deck.slides.length - 1;
-  save(); renderAll();
-}
-
-function parseTimeStr(str) {
-  const m = str.match(/(\d+)\s*minute/i);
-  const s = str.match(/(\d+)\s*second/i);
-  let total = 0;
-  if (m) total += parseInt(m[1]) * 60;
-  if (s) total += parseInt(s[1]);
-  return total || 300;
-}
-
-// ============================================================
-// SCRIPTURE DETECTION ENGINE
-// ============================================================
-
-// Bible book names with aliases for fuzzy matching
-const BIBLE_BOOKS = [
-  // Old Testament
-  { name:'Genesis', aliases:['genesis','gen','ge'] },
-  { name:'Exodus', aliases:['exodus','exod','ex'] },
-  { name:'Leviticus', aliases:['leviticus','lev','lv'] },
-  { name:'Numbers', aliases:['numbers','num','nm'] },
-  { name:'Deuteronomy', aliases:['deuteronomy','deut','dt'] },
-  { name:'Joshua', aliases:['joshua','josh','jos'] },
-  { name:'Judges', aliases:['judges','judg','jdg'] },
-  { name:'Ruth', aliases:['ruth','rut','ru'] },
-  { name:'1 Samuel', aliases:['1 samuel','1 sam','1sam','first samuel','i samuel','first sam','1st samuel'] },
-  { name:'2 Samuel', aliases:['2 samuel','2 sam','2sam','second samuel','ii samuel','second sam','2nd samuel'] },
-  { name:'1 Kings', aliases:['1 kings','1 kgs','1ki','first kings','i kings','1st kings'] },
-  { name:'2 Kings', aliases:['2 kings','2 kgs','2ki','second kings','ii kings','2nd kings'] },
-  { name:'1 Chronicles', aliases:['1 chronicles','1 chron','1chr','first chronicles','i chronicles','1st chronicles'] },
-  { name:'2 Chronicles', aliases:['2 chronicles','2 chron','2chr','second chronicles','ii chronicles','2nd chronicles'] },
-  { name:'Ezra', aliases:['ezra','ezr'] },
-  { name:'Nehemiah', aliases:['nehemiah','neh'] },
-  { name:'Esther', aliases:['esther','est'] },
-  { name:'Job', aliases:['job'] },
-  { name:'Psalm', aliases:['psalm','psalms','ps','pss'] },
-  { name:'Proverbs', aliases:['proverbs','prov','prv'] },
-  { name:'Ecclesiastes', aliases:['ecclesiastes','eccles','ecc','eccl'] },
-  { name:'Song of Solomon', aliases:['song of solomon','song of songs','sos','song','canticles'] },
-  { name:'Isaiah', aliases:['isaiah','isa','is'] },
-  { name:'Jeremiah', aliases:['jeremiah','jer'] },
-  { name:'Lamentations', aliases:['lamentations','lam'] },
-  { name:'Ezekiel', aliases:['ezekiel','ezek','eze'] },
-  { name:'Daniel', aliases:['daniel','dan','dn'] },
-  { name:'Hosea', aliases:['hosea','hos'] },
-  { name:'Joel', aliases:['joel'] },
-  { name:'Amos', aliases:['amos','am'] },
-  { name:'Obadiah', aliases:['obadiah','obad','ob'] },
-  { name:'Jonah', aliases:['jonah','jon'] },
-  { name:'Micah', aliases:['micah','mic'] },
-  { name:'Nahum', aliases:['nahum','nah'] },
-  { name:'Habakkuk', aliases:['habakkuk','hab','habak'] },
-  { name:'Zephaniah', aliases:['zephaniah','zeph','zep'] },
-  { name:'Haggai', aliases:['haggai','hag'] },
-  { name:'Zechariah', aliases:['zechariah','zech','zec'] },
-  { name:'Malachi', aliases:['malachi','mal'] },
-  // New Testament
-  { name:'Matthew', aliases:['matthew','matt','mt'] },
-  { name:'Mark', aliases:['mark','mk'] },
-  { name:'Luke', aliases:['luke','lk'] },
-  { name:'John', aliases:['john','jn','joh'] },
-  { name:'Acts', aliases:['acts','ac'] },
-  { name:'Romans', aliases:['romans','rom','ro'] },
-  { name:'1 Corinthians', aliases:['1 corinthians','1 cor','1cor','first corinthians','i corinthians'] },
-  { name:'2 Corinthians', aliases:['2 corinthians','2 cor','2cor','second corinthians','ii corinthians'] },
-  { name:'Galatians', aliases:['galatians','gal'] },
-  { name:'Ephesians', aliases:['ephesians','eph'] },
-  { name:'Philippians', aliases:['philippians','phil','php'] },
-  { name:'Colossians', aliases:['colossians','col'] },
-  { name:'1 Thessalonians', aliases:['1 thessalonians','1 thess','1thess','first thessalonians','i thessalonians'] },
-  { name:'2 Thessalonians', aliases:['2 thessalonians','2 thess','2thess','second thessalonians','ii thessalonians'] },
-  { name:'1 Timothy', aliases:['1 timothy','1 tim','1tim','first timothy','i timothy'] },
-  { name:'2 Timothy', aliases:['2 timothy','2 tim','2tim','second timothy','ii timothy'] },
-  { name:'Titus', aliases:['titus','tit'] },
-  { name:'Philemon', aliases:['philemon','phm','phlm'] },
-  { name:'Hebrews', aliases:['hebrews','heb'] },
-  { name:'James', aliases:['james','jas','jm'] },
-  { name:'1 Peter', aliases:['1 peter','1 pet','1pet','first peter','i peter'] },
-  { name:'2 Peter', aliases:['2 peter','2 pet','2pet','second peter','ii peter'] },
-  { name:'1 John', aliases:['1 john','1 jn','1jn','first john','i john'] },
-  { name:'2 John', aliases:['2 john','2 jn','2jn','second john','ii john'] },
-  { name:'3 John', aliases:['3 john','3 jn','3jn','third john','iii john'] },
-  { name:'Jude', aliases:['jude','jd'] },
-  { name:'Revelation', aliases:['revelation','revelations','rev','re'] },
-];
-
-// Detection state
-App.detectionQueue = [];
-App.autoDisplay = false;
-App.recentDetections = new Set(); // dedupe within time window
-
-function detectScriptures(text) {
-  const lower = text.toLowerCase();
-  const detections = [];
-
-  // Pattern 1: "Book Chapter:Verse" or "Book Chapter:Verse-Verse" (standard format)
-  // e.g., "John 3:16", "Romans 8:28", "Genesis 1:1-3", "1 Corinthians 13:4"
-  const pattern1 = /\b((?:first|second|third|[123]\s)?\s*[\w]+(?:\s+\w+)?)\s+(\d+):(\d+)(?:-(\d+))?/gi;
-
-  // Pattern 2: "Book Chapter verse Verse" (spoken format)
-  // e.g., "John chapter 3 verse 16", "Genesis chapter 1 verse 3", "First Corinthians 13 4"
-  const pattern2 = /\b((?:first|second|third|[123]\s)?\s*[\w]+(?:\s+\w+)?)\s+(?:chapter\s+)?(\d+)\s+(?:verse\s+)?(\d+)(?:\s+(?:to|through|-)\s+(\d+))?/gi;
-
-  // Pattern 3: "Book Chapter colon Verse" (less common spoken)
-  // Already covered by pattern1
-
-  let match;
-  const found = new Set();
-
-  // Check pattern1
-  while ((match = pattern1.exec(text)) !== null) {
-    const [full, bookWord, chapter, verse, endVerse] = match;
-    const resolved = resolveBook(bookWord.trim());
-    if (resolved) {
-      const ref = formatRef(resolved, chapter, verse, endVerse);
-      if (!found.has(ref)) {
-        found.add(ref);
-        const confidence = scoreDetection(full, resolved, true);
-        detections.push({ ref, book:resolved, chapter, verse, endVerse, confidence, context:full.trim() });
-      }
-    }
-  }
-
-  // Check pattern2 (only if not already found by pattern1)
-  pattern2.lastIndex = 0;
-  while ((match = pattern2.exec(text)) !== null) {
-    const [full, bookWord, chapter, verse, endVerse] = match;
-    const resolved = resolveBook(bookWord.trim());
-    if (resolved) {
-      const ref = formatRef(resolved, chapter, verse, endVerse);
-      if (!found.has(ref)) {
-        found.add(ref);
-        const confidence = scoreDetection(full, resolved, false);
-        detections.push({ ref, book:resolved, chapter, verse, endVerse, confidence, context:full.trim() });
-      }
-    }
-  }
-
-  return detections;
-}
-
-function resolveBook(input) {
-  const lower = input.toLowerCase().trim();
-
-  // Handle spoken "First/Second/Third" → "1/2/3"
-  const spokenPrefix = lower.match(/^(first|second|third)\s+(.*)/);
-  if (spokenPrefix) {
-    const num = { first:'1', second:'2', third:'3' }[spokenPrefix[1]];
-    const rest = spokenPrefix[2];
-    // Try "1 Book" format
-    for (const book of BIBLE_BOOKS) {
-      for (const alias of book.aliases) {
-        if (rest === alias || (alias.length > 2 && rest.startsWith(alias))) {
-          // Verify this is a numbered book
-          if (book.name.startsWith(num + ' ')) return book.name;
-        }
-      }
-    }
-  }
-
-  // Exact name match
-  for (const book of BIBLE_BOOKS) {
-    if (lower === book.name.toLowerCase()) return book.name;
-  }
-  // Alias match
-  for (const book of BIBLE_BOOKS) {
-    for (const alias of book.aliases) {
-      if (lower === alias) return book.name;
-    }
-  }
-  // Partial match (starts with)
-  for (const book of BIBLE_BOOKS) {
-    for (const alias of book.aliases) {
-      if (lower === alias || (alias.length > 3 && lower.startsWith(alias))) return book.name;
-    }
-  }
-  return null;
-}
-
-function formatRef(book, chapter, verse, endVerse) {
-  return `${book} ${chapter}:${verse}${endVerse ? '-' + endVerse : ''}`;
-}
-
-function scoreDetection(rawText, book, hasColon) {
-  let score = 50; // base
-  // Colon format (explicit) = higher confidence
-  if (hasColon) score += 20;
-  // Longer book name = more specific = higher
-  if (book.length > 5) score += 10;
-  // Word "chapter" or "verse" present = explicit
-  if (/chapter|verse/i.test(rawText)) score += 15;
-  // Random noise check — single letter books like "J" are likely false positives
-  if (/^\w\s+\d/.test(rawText) && book.length < 4) score -= 20;
-  // Clamp
-  return Math.max(30, Math.min(98, score));
-}
-
-function isCommand(lower, detections) {
-  // Check if the transcript is a voice command rather than sermon content
-  if (/next (?:slide )?please|next slide|go next|advance/i.test(lower)) return true;
-  if (/previous|go back|last slide/i.test(lower)) return true;
-  if (/blank|black screen|clear/i.test(lower)) return true;
-  if (/first slide|go to start|beginning/i.test(lower)) return true;
-  if (/last slide|go to end|final slide/i.test(lower)) return true;
-  if (/(?:bring up|show|display|pull up|go to)\s+[\w\s]+\d+:\d+/i.test(lower)) return true;
-  if (/countdown|timer/i.test(lower)) return true;
-  if (/announcement/i.test(lower)) return true;
-  return false;
-}
-
-function addToDetectionQueue(detection) {
-  // Dedupe — don't add same ref within 30 seconds
-  const now = Date.now();
-  const key = detection.ref;
-  if (App.recentDetections.has(key)) return;
-  App.recentDetections.add(key);
-  setTimeout(() => App.recentDetections.delete(key), 30000);
-
-  const item = {
-    id: 'det-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
-    ref: detection.ref,
-    confidence: detection.confidence,
-    context: detection.context,
-    timestamp: now,
-    verseText: null,
-    loading: false,
-  };
-  App.detectionQueue.unshift(item);
-  if (App.detectionQueue.length > 20) App.detectionQueue.pop();
-
-  renderDetectionQueue();
-
-  // Auto-fetch verse text
-  fetchDetectionVerse(item);
-
-  // Auto-display if enabled
-  if (App.autoDisplay && detection.confidence >= 60) {
-    setTimeout(() => sendDetectionToLive(item.id), 1500);
-  }
-}
-
-async function fetchDetectionVerse(item) {
-  item.loading = true;
-  try {
-    const ref = item.ref.replace(/\s+/g, '+');
-    const version = App.settings.bibleVersion || 'KJV';
-    const cacheKey = `${ref}-${version}`;
-    if (App.bibleCache[cacheKey]) {
-      item.verseText = App.bibleCache[cacheKey];
-    } else {
-      const resp = await fetch(`https://bible-api.com/${ref}?translation=${version}`);
-      const data = await resp.json();
-      if (data.text) {
-        item.verseText = data.text.trim();
-        App.bibleCache[cacheKey] = item.verseText;
-      }
-    }
-  } catch(e) { /* silent fail */ }
-  item.loading = false;
-  renderDetectionQueue();
-}
-
-function renderDetectionQueue() {
-  const list = document.getElementById('detectionList');
-  const empty = document.getElementById('detectionEmpty');
-  const countEl = document.getElementById('detectionCount');
-
-  if (App.detectionQueue.length === 0) {
-    list.innerHTML = '<div class="detection-empty">No scriptures detected yet.<br>Start speaking to see AI detection in action.</div>';
-    countEl.textContent = '0 detected';
-    return;
-  }
-
-  countEl.textContent = `${App.detectionQueue.length} detected`;
-
-  list.innerHTML = App.detectionQueue.map(item => {
-    const confClass = item.confidence >= 75 ? 'high' : item.confidence >= 55 ? 'med' : 'low';
-    const confLabel = item.confidence >= 75 ? 'High' : item.confidence >= 55 ? 'Medium' : 'Low';
-    const versePreview = item.verseText ? `<div class="det-preview-text">${esc(item.verseText.substring(0, 100))}${item.verseText.length > 100 ? '...' : ''}</div>` : '';
-
-    return `
-      <div class="detection-item ${confClass}">
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;">
-            <span class="det-ref">📖 ${esc(item.ref)}</span>
-            <span class="det-confidence ${confClass}">${item.confidence}%</span>
-          </div>
-          ${versePreview}
-        </div>
-        <div class="det-actions">
-          <button class="det-btn preview" title="Preview" onclick="previewDetection('${item.id}')">👁</button>
-          <button class="det-btn send" title="Send to Live" onclick="sendDetectionToLive('${item.id}')">▶</button>
-          <button class="det-btn dismiss" title="Dismiss" onclick="dismissDetection('${item.id}')">✕</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function previewDetection(id) {
-  const item = App.detectionQueue.find(d => d.id === id);
-  if (!item) return;
-  if (item.verseText) {
-    const deck = getDeck();
-    if (!deck) return;
-    const slide = { type:'verse', bg:'black', verseRef:item.ref, verseText:item.verseText };
-    deck.slides.push(slide);
-    App.currentSlideIdx = deck.slides.length - 1;
-    save(); renderAll();
-    flashStatus(`👁 Previewing ${item.ref}`);
-  } else {
-    flashStatus('⏳ Loading verse...');
-  }
-}
-
-function sendDetectionToLive(id) {
-  const item = App.detectionQueue.find(d => d.id === id);
-  if (!item) return;
-  if (item.verseText) {
-    const deck = getDeck();
-    if (!deck) return;
-    const slide = { type:'verse', bg:'black', verseRef:item.ref, verseText:item.verseText };
-    deck.slides.push(slide);
-    App.currentSlideIdx = deck.slides.length - 1;
-    save(); renderAll();
-    // Remove from queue
-    App.detectionQueue = App.detectionQueue.filter(d => d.id !== id);
-    renderDetectionQueue();
-    flashStatus(`✅ ${item.ref} sent to live`);
-  } else {
-    flashStatus('⏳ Still loading verse text...');
-    setTimeout(() => sendDetectionToLive(id), 2000);
-  }
-}
-
-function dismissDetection(id) {
-  App.detectionQueue = App.detectionQueue.filter(d => d.id !== id);
-  renderDetectionQueue();
-}
-
-function clearDetectionQueue() {
-  App.detectionQueue = [];
-  renderDetectionQueue();
-}
-
-function toggleAutoDisplay() {
-  App.autoDisplay = !App.autoDisplay;
-  document.getElementById('autoDisplayToggle').classList.toggle('on', App.autoDisplay);
-  flashStatus(App.autoDisplay ? '✅ Auto-display ON — verses show automatically' : 'Auto-display OFF');
-}
-
-function showTranscript(text) {
-  const overlay = document.getElementById('transcriptOverlay');
-  // Highlight any detected verse references in the transcript
-  let display = esc(text);
-  const verseRegex = /\b((?:\d\s)?[\w]+(?:\s\w+)?\s+\d+:\d+(?:-\d+)?)/g;
-  display = display.replace(verseRegex, '<span class="highlight">$1</span>');
-  overlay.innerHTML = display;
-  overlay.classList.add('show');
-  clearTimeout(overlay._timeout);
-  overlay._timeout = setTimeout(() => overlay.classList.remove('show'), 8000);
-}
-
-// ============================================================
-// SERMON PREPARATION TOOL
-// ============================================================
-
-function openSermonPrep() {
-  const modal = document.getElementById('modalContent');
-  modal.innerHTML = `
-    <div>
-      <h2>📖 Sermon Preparation Tool</h2>
-      <p style="color:var(--text2);margin-bottom:16px;font-size:13px;">AI-powered sermon prep — generate outlines, find scriptures, build your message, then export straight to a slide deck.</p>
-
-      <div id="sermonSteps" style="display:flex;gap:4px;margin-bottom:20px;">
-        <div class="sermon-step active" data-step="1">1. Topic</div>
-        <div class="sermon-step" data-step="2">2. Outline</div>
-        <div class="sermon-step" data-step="3">3. Scriptures</div>
-        <div class="sermon-step" data-step="4">4. Export</div>
-      </div>
-
-      <div id="sermonStep1" class="sermon-step-content">
-        <div class="editor-field">
-          <label>Sermon Topic or Theme</label>
-          <input type="text" id="sermonTopic" placeholder="e.g., God's grace in difficult times, The power of prayer, Walking by faith not sight" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
-        </div>
-        <div class="editor-field">
-          <label>Additional Context (optional)</label>
-          <textarea id="sermonContext" placeholder="Target audience, key message, desired length, specific angle..." style="width:100%;min-height:80px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;"></textarea>
-        </div>
-        <div class="editor-field">
-          <label>Style</label>
-          <select id="sermonStyle" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-            <option value="expository">Expository (verse-by verse)</option>
-            <option value="topical">Topical (theme-based)</option>
-            <option value="textual">Textual ( anchored in a key verse)</option>
-            <option value="narrative">Narrative (story-driven)</option>
-          </select>
-        </div>
-        <div class="editor-field">
-          <label>AI Provider</label>
-          <select id="sermonProvider" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-            <option value="openai" ${App.settings.aiProvider==='openai'?'selected':''}>OpenAI (GPT-4o)</option>
-            <option value="anthropic" ${App.settings.aiProvider==='anthropic'?'selected':''}>Anthropic (Claude)</option>
-            <option value="custom" ${App.settings.aiProvider==='custom'?'selected':''}>Custom (OpenAI-compatible)</option>
-          </select>
-        </div>
-        <div class="editor-field">
-          <label>API Key</label>
-          <input type="password" id="sermonKey" value="${esc(App.settings.aiApiKey||'')}" placeholder="sk-..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-        </div>
-        <div id="sermonUrlWrap" class="editor-field" style="display:none;">
-          <label>Custom API URL</label>
-          <input type="text" id="sermonUrl" placeholder="https://api.example.com/v1/chat/completions" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-        </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="generateSermonOutline()">🤖 Generate Sermon Outline</button>
-      </div>
-
-      <div id="sermonStep2" class="sermon-step-content" style="display:none;">
-        <div id="sermonOutlineResult"></div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
-          <button class="btn btn-secondary" onclick="sermonGoStep(1)">← Back</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="generateSermonScriptures()">📖 Find Scriptures</button>
-        </div>
-      </div>
-
-      <div id="sermonStep3" class="sermon-step-content" style="display:none;">
-        <div id="sermonScriptureResult"></div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
-          <button class="btn btn-secondary" onclick="sermonGoStep(2)">← Back</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="finalizeSermon()">✅ Build Slide Deck</button>
-        </div>
-      </div>
-
-      <div id="sermonStep4" class="sermon-step-content" style="display:none;">
-        <div id="sermonExportResult"></div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-      </div>
-    </div>
-    <style>
-      .sermon-step { flex:1; padding:8px; text-align:center; font-size:12px; font-weight:600; border-radius:8px; background:var(--bg3); color:var(--text3); }
-      .sermon-step.active { background:var(--accent); color:#fff; }
-      .sermon-step.done { background:var(--success); color:#fff; }
-      .sermon-outline-point { padding:12px; background:var(--bg3); border-radius:8px; margin-bottom:8px; border-left:3px solid var(--accent); }
-      .sermon-outline-point h4 { font-size:14px; margin-bottom:4px; }
-      .sermon-outline-point p { font-size:13px; color:var(--text2); }
-      .sermon-scripture-card { padding:12px; background:var(--bg3); border-radius:8px; margin-bottom:8px; border-left:3px solid var(--accent3); }
-      .sermon-scripture-card .ref { font-weight:700; font-size:14px; margin-bottom:4px; }
-      .sermon-scripture-card .text { font-size:13px; color:var(--text2); font-style:italic; }
-      .sermon-scripture-card .usage { font-size:11px; color:var(--accent3); margin-top:4px; }
-      .sermon-loading { text-align:center; padding:40px 20px; color:var(--text2); }
-      .sermon-loading .spinner { font-size:32px; animation:spin 2s linear infinite; display:block; margin-bottom:12px; }
-      @keyframes spin { 100% { transform:rotate(360deg); } }
-    </style>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-
-  // Show/hide custom URL field
-  document.getElementById('sermonProvider').onchange = function() {
-    document.getElementById('sermonUrlWrap').style.display = this.value === 'custom' ? 'block' : 'none';
-  };
-
-  // Store sermon working data
-  App.sermonData = { topic:'', context:'', style:'', outline:null, scriptures:[] };
-}
-
-function sermonGoStep(step) {
-  for (let i = 1; i <= 4; i++) {
-    document.getElementById('sermonStep' + i).style.display = i === step ? 'block' : 'none';
-  }
-  document.querySelectorAll('.sermon-step').forEach(el => {
-    const s = parseInt(el.dataset.step);
-    el.classList.remove('active', 'done');
-    if (s < step) el.classList.add('done');
-    else if (s === step) el.classList.add('active');
-  });
-}
-
-async function generateSermonOutline() {
-  const topic = document.getElementById('sermonTopic').value.trim();
-  const context = document.getElementById('sermonContext').value.trim();
-  const style = document.getElementById('sermonStyle').value;
-  const provider = document.getElementById('sermonProvider').value;
-  const key = document.getElementById('sermonKey').value.trim();
-  let url = provider === 'custom' ? document.getElementById('sermonUrl').value.trim() : '';
-
-  if (!topic) { alert('Enter a sermon topic'); return; }
-  if (!key) { alert('Enter your API key'); return; }
-
-  // Save settings
-  App.settings.aiProvider = provider;
-  App.settings.aiApiKey = key;
-  save();
-  App.sermonData = { topic, context, style, outline:null, scriptures:[] };
-
-  document.getElementById('sermonStep1').innerHTML = '<div class="sermon-loading"><span class="spinner">📖</span>Generating sermon outline...</div>';
-
-  const prompt = `Create a ${style} sermon on the topic: "${topic}"${context ? '. Additional context: ' + context : ''}.
-
-Structure as JSON with:
-{
-  "title": "Sermon title",
-  "theme": "One sentence theme",
-  "introduction": "Opening hook and context (2-3 sentences)",
-  "main_points": [
-    {"title": "Point title", "description": "What this point covers (2-3 sentences)"}
-  ],
-  "conclusion": "Closing summary and call to action (2-3 sentences)",
-  "suggested_scriptures": ["Reference 1", "Reference 2", "Reference 3-5"]
-}
-
-Provide 3-4 main points. Respond with ONLY the JSON, no markdown.`;
-
-  try {
-    let result;
-    if (provider === 'openai' || provider === 'custom') {
-      const apiUrl = url || 'https://api.openai.com/v1/chat/completions';
-      result = await callOpenAICompatible(apiUrl, key, prompt, 'You are a sermon preparation assistant. Respond only with valid JSON.', provider === 'openai' ? 'gpt-4o' : undefined);
-    } else if (provider === 'anthropic') {
-      result = await callAnthropic(key, prompt, 'You are a sermon preparation assistant. Respond only with valid JSON.');
-    }
-
-    const jsonMatch = result.match(/\{[\s\S]*\}/);
-    const outline = JSON.parse(jsonMatch[0]);
-    App.sermonData.outline = outline;
-
-    // Render outline
-    const html = `
-      <h3 style="font-size:18px;margin-bottom:4px;">${esc(outline.title)}</h3>
-      <p style="color:var(--accent3);font-style:italic;margin-bottom:16px;font-size:13px;">${esc(outline.theme)}</p>
-
-      <div class="sermon-outline-point" style="border-left-color:var(--accent3);">
-        <h4>📖 Introduction</h4>
-        <p>${esc(outline.introduction)}</p>
-      </div>
-
-      ${outline.main_points.map((p, i) => `
-        <div class="sermon-outline-point">
-          <h4>${i+1}. ${esc(p.title)}</h4>
-          <p>${esc(p.description)}</p>
-        </div>
-      `).join('')}
-
-      <div class="sermon-outline-point" style="border-left-color:var(--success);">
-        <h4>✅ Conclusion</h4>
-        <p>${esc(outline.conclusion)}</p>
-      </div>
-
-      ${outline.suggested_scriptures?.length ? `
-        <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;">
-          <strong style="font-size:13px;">📚 Suggested Scriptures:</strong>
-          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
-            ${outline.suggested_scriptures.map(s => `<span style="padding:4px 10px;background:var(--bg3);border-radius:12px;font-size:12px;">${esc(s)}</span>`).join('')}
-          </div>
-        </div>
-      ` : ''}
-    `;
-
-    document.getElementById('sermonStep1').style.display = 'none';
-    document.getElementById('sermonStep2').innerHTML = html + `
-      <div style="display:flex;gap:8px;margin-top:16px;">
-        <button class="btn btn-secondary" onclick="sermonGoStep(1)">← Edit Topic</button>
-        <button class="btn btn-primary" style="flex:1;" onclick="generateSermonScriptures()">📖 Find Full Scriptures →</button>
-      </div>
-    `;
-    sermonGoStep(2);
-  } catch(e) {
-    document.getElementById('sermonStep1').innerHTML = `<div style="padding:20px;color:var(--danger);">❌ Failed: ${esc(e.message)}</div>`;
-  }
-}
-
-async function generateSermonScriptures() {
-  if (!App.sermonData.outline) return;
-  const scriptures = App.sermonData.outline.suggested_scriptures || [];
-  if (scriptures.length === 0) {
-    sermonGoStep(3);
-    document.getElementById('sermonStep3').innerHTML = '<p style="color:var(--text2);">No suggested scriptures to fetch. You can proceed to build the deck.</p><div style="margin-top:16px;"><button class="btn btn-primary" onclick="finalizeSermon()">✅ Build Slide Deck →</button></div>';
-    return;
-  }
-
-  document.getElementById('sermonStep2').style.display = 'none';
-  document.getElementById('sermonStep3').innerHTML = '<div class="sermon-loading"><span class="spinner">📖</span>Fetching scripture texts...</div>';
-  sermonGoStep(3);
-
-  const version = App.settings.bibleVersion || 'KJV';
-  const fetched = [];
-
-  for (const ref of scriptures) {
-    try {
-      const refEncoded = ref.trim().replace(/\s+/g, '+');
-      const cacheKey = `${refEncoded}-${version}`;
-      let text;
-      if (App.bibleCache[cacheKey]) {
-        text = App.bibleCache[cacheKey];
-      } else {
-        const resp = await fetch(`https://bible-api.com/${refEncoded}?translation=${version}`);
-        const data = await resp.json();
-        text = data.text?.trim();
-        if (text) App.bibleCache[cacheKey] = text;
-      }
-      if (text) {
-        fetched.push({ ref: ref.trim(), text, usage: getScriptureUsage(ref, App.sermonData.outline) });
-      }
-    } catch(e) { /* skip */ }
-  }
-
-  App.sermonData.scriptures = fetched;
-
-  const html = fetched.length > 0 ? fetched.map(s => `
-    <div class="sermon-scripture-card">
-      <div class="ref">📖 ${esc(s.ref)}</div>
-      <div class="text">"${esc(s.text)}"</div>
-      ${s.usage ? `<div class="usage">💡 ${esc(s.usage)}</div>` : ''}
-    </div>
-  `).join('') : '<p style="color:var(--text2);">Could not fetch scripture texts. Check your connection.</p>';
-
-  document.getElementById('sermonStep3').innerHTML = html + `
-    <div style="display:flex;gap:8px;margin-top:16px;">
-      <button class="btn btn-secondary" onclick="sermonGoStep(2)">← Back to Outline</button>
-      <button class="btn btn-primary" style="flex:1;" onclick="finalizeSermon()">✅ Build Slide Deck →</button>
-    </div>
-  `;
-}
-
-function getScriptureUsage(ref, outline) {
-  // Try to match scripture to a main point
-  if (!outline?.main_points) return '';
-  for (const point of outline.main_points) {
-    if (point.description && point.description.toLowerCase().includes(ref.toLowerCase().split(/\s/)[0].toLowerCase())) {
-      return `Pairs with: ${point.title}`;
-    }
-  }
-  return 'Supporting scripture';
-}
-
-function finalizeSermon() {
-  const data = App.sermonData;
-  if (!data.outline) return;
-
-  const slides = [];
-
-  // Title slide
-  slides.push({ type:'welcome', bg:'gradient', title:data.outline.title, subtitle:data.outline.theme || data.topic });
-
-  // Introduction
-  slides.push({ type:'announcement', bg:'bg-gradient', title:'Introduction', text:data.outline.introduction });
-
-  // Scripture verses
-  data.scriptures.forEach(s => {
-    slides.push({ type:'verse', bg:'black', verseRef:s.ref, verseText:s.text });
-  });
-
-  // Main points
-  data.outline.main_points.forEach((point, i) => {
-    slides.push({ type:'announcement', bg:'gradient', title:`Point ${i+1}: ${point.title}`, text:point.description });
-  });
-
-  // Conclusion
-  slides.push({ type:'announcement', bg:'nature', title:'Conclusion', text:data.outline.conclusion });
-
-  // Closing blank
-  slides.push({ type:'blank', bg:'black' });
-
-  // Create deck
-  const deck = {
-    id: 'deck-' + Date.now(),
-    title: data.outline.title || 'Sermon Deck',
-    created: Date.now(),
-    slides,
-  };
-
-  App.decks.push(deck);
-  App.currentDeckId = deck.id;
-  App.currentSlideIdx = 0;
-  save();
-  closeModal();
-  renderAll();
-  flashStatus(`✅ Sermon deck created with ${slides.length} slides!`);
-
-  // Show success step
-  sermonGoStep(4);
-}
-
-// ---------- COUNTDOWN TIMER ----------
-let countdownInterval = null;
-function startCountdown(seconds) {
-  if (countdownInterval) clearInterval(countdownInterval);
-  const el = document.getElementById('countdownEl');
-  if (!el) return;
-  let remaining = seconds;
-  countdownInterval = setInterval(() => {
-    remaining--;
-    if (el) el.textContent = formatCountdown(remaining);
-    if (remaining <= 0) {
-      clearInterval(countdownInterval);
-      if (el) el.textContent = '00:00';
-    }
-  }, 1000);
-}
-
-function formatCountdown(seconds) {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
-}
-
-// ---------- PRESENT MODE ----------
-function present() {
-  const frame = document.getElementById('previewArea');
-  if (frame.requestFullscreen) {
-    frame.requestFullscreen();
-  } else if (frame.webkitRequestFullscreen) {
-    frame.webkitRequestFullscreen();
-  }
-  App.isPresenting = true;
-  flashStatus('🖥️ Presentation mode — ESC to exit');
-}
-
-// ---------- STATUS FLASH ----------
-let statusTimeout = null;
-function flashStatus(msg) {
-  const el = document.getElementById('statusText');
-  el.textContent = msg;
-  if (statusTimeout) clearTimeout(statusTimeout);
-  statusTimeout = setTimeout(() => {
-    el.textContent = 'Ready';
-  }, 3000);
-}
-
-// ---------- AI BUILDER ----------
-function openAIBuilder() {
-  const modal = document.getElementById('modalContent');
-  modal.innerHTML = `
-    <div class="ai-builder">
-      <h2>🤖 Build a Deck with AI</h2>
-      <p style="color:var(--text2);margin-bottom:12px;font-size:13px;">Describe your service and AI will generate a complete slide deck.</p>
-      <textarea id="aiPrompt" placeholder="Example: Sunday morning service with 3 worship songs (Amazing Grace, How Great Thou Art, 10,000 Reasons), announcements for youth group Friday 7pm, sermon on John 3 about being born again, closing with communion"></textarea>
-      <div class="ai-presets">
-        <span class="ai-preset" onclick="setAIPreset('Sunday morning worship service with 3 songs, announcements, and a sermon on faith')">Sunday Service</span>
-        <span class="ai-preset" onclick="setAIPreset('Wednesday Bible study on Romans 8 with discussion questions')">Bible Study</span>
-        <span class="ai-preset" onclick="setAIPreset('Youth group night with games, worship, and a message on courage')">Youth Night</span>
-        <span class="ai-preset" onclick="setAIPreset('Christmas Eve candlelight service with carols and nativity reading')">Christmas Eve</span>
-      </div>
-      <div style="margin-top:16px;">
-        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">AI Provider</label>
-        <select id="aiProvider" onchange="updateAIProviderUI()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-          <option value="openai">OpenAI (GPT-4o)</option>
-          <option value="anthropic">Anthropic (Claude)</option>
-          <option value="custom">Custom (OpenAI-compatible)</option>
-        </select>
-      </div>
-      <div id="aiKeyField" style="margin-top:12px;">
-        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">API Key</label>
-        <input type="password" id="aiKeyInput" value="${esc(App.settings.aiApiKey)}" placeholder="sk-..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-      </div>
-      <div id="aiUrlField" style="margin-top:12px;display:none;">
-        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">API URL</label>
-        <input type="text" id="aiUrlInput" placeholder="https://api.example.com/v1/chat/completions" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="generateDeck()">🚀 Generate Deck</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-  document.getElementById('aiProvider').value = App.settings.aiProvider || 'openai';
-  updateAIProviderUI();
-}
-
-function setAIPreset(text) {
-  document.getElementById('aiPrompt').value = text;
-}
-
-function updateAIProviderUI() {
-  const provider = document.getElementById('aiProvider').value;
-  document.getElementById('aiUrlField').style.display = provider === 'custom' ? 'block' : 'none';
-}
-
-async function generateDeck() {
-  const prompt = document.getElementById('aiPrompt').value.trim();
-  const provider = document.getElementById('aiProvider').value;
-  const key = document.getElementById('aiKeyInput').value.trim();
-  let url = provider === 'custom' ? document.getElementById('aiUrlInput').value.trim() : '';
-
-  if (!prompt) { alert('Enter a description'); return; }
-  if (!key) { alert('Enter your API key'); return; }
-
-  // Save settings
-  App.settings.aiProvider = provider;
-  App.settings.aiApiKey = key;
-  save();
-
-  document.querySelector('#modalContent .btn-primary').textContent = '⏳ Generating...';
-  document.querySelector('#modalContent .btn-primary').disabled = true;
-
-  const systemPrompt = `You are a church presentation deck generator. Create a JSON array of slides for a church service. Each slide has: type (welcome, worship, verse, announcement, blank, countdown, notification), bg (black, white, gradient, worship, nature), and type-specific fields.
-
-Slide types and their fields:
-- welcome: title, subtitle
-- worship: title (song name), lyrics (text with \\n for line breaks)
-- verse: verseRef (e.g. "John 3:16"), verseText
-- announcement: title, text (\\n for lines)
-- blank: (no fields)
-- countdown: seconds (integer)
-- notification: text
-
-Respond with ONLY a JSON array of slide objects. No markdown, no explanation. Example:
-[{"type":"welcome","bg":"gradient","title":"Welcome","subtitle":"We're glad you're here"},{"type":"worship","bg":"worship","title":"Amazing Grace","lyrics":"Amazing grace, how sweet the sound\\nThat saved a wretch like me"}]`;
-
-  try {
-    let apiResult;
-    if (provider === 'openai' || provider === 'custom') {
-      const apiUrl = url || 'https://api.openai.com/v1/chat/completions';
-      apiResult = await callOpenAICompatible(apiUrl, key, prompt, systemPrompt, provider === 'openai' ? 'gpt-4o' : undefined);
-    } else if (provider === 'anthropic') {
-      apiResult = await callAnthropic(key, prompt, systemPrompt);
-    }
-
-    let slides;
-    // Try to extract JSON from response
-    const jsonMatch = apiResult.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      slides = JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error('Could not parse AI response as JSON');
-    }
-
-    // Create deck from AI output
-    const deck = {
-      id: 'deck-' + Date.now(),
-      title: prompt.substring(0, 40) + (prompt.length > 40 ? '...' : ''),
-      created: Date.now(),
-      slides: slides,
-    };
-
-    // Fetch any Bible verses that don't have text
-    for (const slide of deck.slides) {
-      if (slide.type === 'verse' && slide.verseRef && !slide.verseText) {
-        try {
-          const ref = slide.verseRef.replace(/\s+/g, '+');
-          const resp = await fetch(`https://bible-api.com/${ref}?translation=${App.settings.bibleVersion}`);
-          const data = await resp.json();
-          if (data.text) slide.verseText = data.text.trim();
-        } catch(e) { /* skip failed verse */ }
-      }
-    }
-
-    App.decks.push(deck);
-    App.currentDeckId = deck.id;
-    App.currentSlideIdx = 0;
-    save();
-    closeModal();
-    renderAll();
-    flashStatus(`✅ Deck generated with ${deck.slides.length} slides!`);
-  } catch(e) {
-    alert('AI generation failed: ' + e.message);
-    document.querySelector('#modalContent .btn-primary').textContent = '🚀 Generate Deck';
-    document.querySelector('#modalContent .btn-primary').disabled = false;
-  }
-}
-
-async function callOpenAICompatible(url, key, prompt, systemPrompt, model) {
-  const body = {
-    messages: [
-      { role:'system', content:systemPrompt },
-      { role:'user', content:prompt },
-    ],
-    temperature: 0.7,
-  };
-  if (model) body.model = model;
-  const resp = await fetch(url, {
-    method:'POST',
-    headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${key}` },
-    body: JSON.stringify(body),
-  });
-  if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
-  const data = await resp.json();
-  return data.choices[0].message.content;
-}
-
-async function callAnthropic(key, prompt, systemPrompt) {
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers: {
-      'Content-Type':'application/json',
-      'x-api-key':key,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true',
-    },
-    body: JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:4096,
-      system:systemPrompt,
-      messages: [{ role:'user', content:prompt }],
-    }),
-  });
-  if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
-  const data = await resp.json();
-  return data.content[0].text;
-}
-
-// ---------- SETTINGS ----------
-function openSettings() {
-  const modal = document.getElementById('modalContent');
-  modal.innerHTML = `
-    <h2>⚙️ Settings</h2>
-    <div class="settings-row">
-      <div><strong>Bible Version</strong><div style="font-size:12px;color:var(--text2);">Used for verse lookups</div></div>
-      <select id="setBibleVer" style="padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);">
-        <option value="KJV" ${App.settings.bibleVersion==='KJV'?'selected':''}>KJV</option>
-        <option value="ESV" ${App.settings.bibleVersion==='ESV'?'selected':''}>ESV</option>
-        <option value="NIV" ${App.settings.bibleVersion==='NIV'?'selected':''}>NIV</option>
-        <option value="WEB" ${App.settings.bibleVersion==='WEB'?'selected':''}>WEB</option>
-        <option value="NASB" ${App.settings.bibleVersion==='NASB'?'selected':''}>NASB</option>
-      </select>
-    </div>
-    <div class="settings-row">
-      <div><strong>Voice Commands</strong><div style="font-size:12px;color:var(--text2);">Listen to mic for slide commands</div></div>
-      <div class="toggle ${App.settings.voiceCommands?'on':''}" id="toggleVoice" onclick="App.settings.voiceCommands=!App.settings.voiceCommands;this.classList.toggle('on');save()"></div>
-    </div>
-    <div class="settings-row">
-      <div><strong>Auto-Advance</strong><div style="font-size:12px;color:var(--text2);">AI follows audio and advances automatically</div></div>
-      <div class="toggle ${App.settings.autoAdvance?'on':''}" id="toggleAuto" onclick="App.settings.autoAdvance=!App.settings.autoAdvance;this.classList.toggle('on');save()"></div>
-    </div>
-    <div class="settings-row">
-      <div><strong>Export Data</strong><div style="font-size:12px;color:var(--text2);">Download all decks as JSON</div></div>
-      <button class="btn btn-sm btn-secondary" onclick="exportData()">Export</button>
-    </div>
-    <div class="settings-row">
-      <div><strong>Import Data</strong><div style="font-size:12px;color:var(--text2);">Upload a JSON backup</div></div>
-      <button class="btn btn-sm btn-secondary" onclick="document.getElementById('importFile').click()">Import</button>
-      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-    </div>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-
-  document.getElementById('setBibleVer').onchange = function() {
-    App.settings.bibleVersion = this.value;
-    save();
-  };
-}
-
-function exportData() {
-  const blob = new Blob([JSON.stringify({decks:App.decks, settings:App.settings}, null, 2)], { type:'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'crosspresenter-backup.json';
-  a.click();
-}
-
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (data.decks) App.decks = data.decks;
-      if (data.settings) Object.assign(App.settings, data.settings);
-      save();
-      renderAll();
-      closeModal();
-    } catch(e) { alert('Invalid file'); }
-  };
-  reader.readAsText(file);
-}
-
-// ---------- MODAL ----------
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('show');
-}
-
-// ---------- KEYBOARD ----------
-document.addEventListener('keydown', (e) => {
-  // Don't intercept if typing in input
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-  if (document.getElementById('modalOverlay').classList.contains('show')) {
-    if (e.key === 'Escape') closeModal();
-    return;
-  }
-
-  switch(e.key) {
-    case 'ArrowRight': case ' ': case 'PageDown':
-      e.preventDefault(); nextSlide(); break;
-    case 'ArrowLeft': case 'PageUp':
-      e.preventDefault(); prevSlide(); break;
-    case 'Home': goToSlide(0); break;
-    case 'End': const d=getDeck(); if(d) goToSlide(d.slides.length-1); break;
-    case 'Escape':
-      if (App.isPresenting) { App.isPresenting = false; }
-      if (document.fullscreenElement) document.exitFullscreen();
-      break;
-    case 'f': case 'F':
-      present(); break;
-    case 'b': case 'B':
-      addBlankSlide(); break;
-  }
-});
-
-// ---------- UTIL ----------
-function esc(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ---------- RENDER ALL ----------
-function renderAll() {
-  renderDeckList();
-  renderCurrentSlide();
-  renderThumbs();
-}
-
-// ---------- INIT ----------
-load();
-renderAll();
-
-// Service worker registration
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
-
-// Handle countdown when slide changes
-const observer = new MutationObserver(() => {
-  const cd = document.getElementById('countdownEl');
-  if (cd) {
-    const deck = getDeck();
-    if (deck) {
-      const slide = deck.slides[App.currentSlideIdx];
-      if (slide && slide.type === 'countdown') startCountdown(slide.seconds);
-    }
-  }
-});
-observer.observe(document.getElementById('slideCanvas'), { childList:true, subtree:true });
-</script>
-</body>
-</html>
+1|<!DOCTYPE html>
+2|<html lang="en">
+3|<head>
+4|<meta charset="UTF-8">
+5|<meta name="viewport" content="width=device-width, initial-scale=1.0">
+6|<title>CrossPresenter — Luther's Code</title>
+7|<link rel="manifest" href="manifest.json">
+8|<meta name="theme-color" content="#0a0a1a">
+9|<link rel="apple-touch-icon" href="icons/icon-192.png">
+10|<style>
+11|/* ========== RESET & BASE ========== */
+12|* { margin:0; padding:0; box-sizing:border-box; }
+13|:root {
+14|  --bg:#0a0a1a; --bg2:#12122a; --bg3:#1a1a3a;
+15|  --text:#e8e8ff; --text2:#a0a0c0; --text3:#606080;
+16|  --accent:#c9a96e; --accent2:#d4b87e; --accent3:#9ec5a8;
+17|  --success:#00b894; --danger:#e74c3c; --warn:#fdcb6e;
+18|  --border:#2a2a4a; --radius:12px;
+19|}
+20|html,body { height:100%; overflow:hidden; }
+21|body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:14px; }
+22|input,textarea,select { font-family:inherit; }
+23|
+24|/* ========== LAYOUT ========== */
+25|.app { display:flex; height:100vh; }
+26|.sidebar { width:320px; min-width:320px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+27|.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+28|
+29|/* ========== SIDEBAR ========== */
+30|.sidebar-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+31|.logo { font-size:20px; font-weight:700; background:linear-gradient(135deg,var(--accent2),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+32|.logo-sub { font-size:11px; color:var(--text3); }
+33|
+34|.deck-list { flex:1; overflow-y:auto; padding:8px; }
+35|.deck-item { padding:12px; border-radius:8px; cursor:pointer; margin-bottom:4px; transition:background .15s; }
+36|.deck-item:hover { background:var(--bg3); }
+37|.deck-item.active { background:var(--accent); }
+38|.deck-item-title { font-weight:600; font-size:13px; }
+39|.deck-item-meta { font-size:11px; color:var(--text3); margin-top:2px; }
+40|
+41|.sidebar-actions { padding:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
+42|
+43|/* ========== BUTTONS ========== */
+44|.btn { padding:10px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+45|.btn-primary { background:var(--accent); color:#fff; }
+46|.btn-primary:hover { background:var(--accent2); }
+47|.btn-secondary { background:var(--bg3); color:var(--text); }
+48|.btn-secondary:hover { background:var(--border); }
+49|.btn-success { background:var(--success); color:#fff; }
+50|.btn-danger { background:var(--danger); color:#fff; }
+51|.btn-sm { padding:6px 12px; font-size:12px; }
+52|.btn-icon { width:36px; height:36px; padding:0; border-radius:8px; }
+53|.btn:disabled { opacity:.4; cursor:not-allowed; }
+54|
+55|/* ========== TOP BAR ========== */
+56|.topbar { height:56px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:12px; }
+57|.topbar-title { font-weight:600; font-size:15px; flex:1; }
+58|.topbar-controls { display:flex; gap:8px; align-items:center; }
+59|
+60|/* ========== PREVIEW AREA ========== */
+61|.preview-area { flex:1; display:flex; align-items:center; justify-content:center; background:#000; position:relative; overflow:hidden; }
+62|.preview-frame { width:100%; height:100%; position:relative; }
+63|.slide-canvas { width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:absolute; top:0; left:0; }
+64|
+65|/* ========== SLIDE STYLES ========== */
+66|.slide { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:absolute; opacity:0; transition:opacity .3s; padding:8%; text-align:center; }
+67|.slide.active { opacity:1; z-index:2; }
+68|.slide.bg-black { background:#000; }
+69|.slide.bg-white { background:#fff; color:#000; }
+70|.slide.bg-gradient { background:linear-gradient(135deg,#1a1a3a,#0a0a1a); }
+71|.slide.bg-worship { background:linear-gradient(180deg,#0a0a2a 0%,#1a1a4a 50%,#0a0a2a 100%); }
+72|.slide.bg-nature { background:linear-gradient(135deg,#0d4f3c,#1a7a5a); }
+73|
+74|.slide h1 { font-size:clamp(2rem,6vw,5rem); font-weight:800; line-height:1.2; margin-bottom:.3em; }
+75|.slide h2 { font-size:clamp(1.5rem,4vw,3rem); font-weight:600; line-height:1.3; }
+76|.slide p { font-size:clamp(1rem,2.5vw,2rem); line-height:1.5; max-width:80%; }
+77|.slide .verse-ref { font-size:clamp(.9rem,2vw,1.5rem); font-style:italic; opacity:.7; margin-top:.5em; }
+78|.slide .lyrics { font-size:clamp(1.2rem,3.5vw,2.8rem); line-height:1.8; white-space:pre-line; font-weight:600; }
+79|.slide .countdown { font-size:clamp(3rem,15vw,10rem); font-weight:900; font-variant-numeric:tabular-nums; }
+80|.slide .notification { font-size:clamp(1.5rem,5vw,4rem); font-weight:700; padding:1em; }
+81|
+82|/* ========== EDITOR PANEL ========== */
+83|.editor-panel { position:absolute; top:0; right:0; width:380px; height:100%; background:var(--bg2); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .3s; z-index:100; display:flex; flex-direction:column; }
+84|.editor-panel.open { transform:translateX(0); }
+85|.editor-header { padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+86|.editor-body { flex:1; overflow-y:auto; padding:16px; }
+87|.editor-field { margin-bottom:16px; }
+88|.editor-field label { display:block; font-size:12px; color:var(--text2); margin-bottom:6px; font-weight:600; }
+89|.editor-field input, .editor-field textarea, .editor-field select { width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; }
+90|.editor-field textarea { min-height:100px; resize:vertical; }
+91|.slide-type-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+92|.slide-type-btn { padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; cursor:pointer; text-align:center; font-size:12px; transition:all .15s; }
+93|.slide-type-btn:hover, .slide-type-btn.selected { border-color:var(--accent); background:var(--bg3); }
+94|
+95|/* ========== THUMBNAIL STRIP ========== */
+96|.thumb-strip { height:120px; min-height:120px; background:var(--bg2); border-top:1px solid var(--border); display:flex; align-items:center; padding:8px; gap:8px; overflow-x:auto; }
+97|.thumb { min-width:180px; width:180px; height:100px; background:var(--bg3); border:2px solid transparent; border-radius:8px; cursor:pointer; position:relative; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:8px; text-align:center; }
+98|.thumb:hover { border-color:var(--accent2); }
+99|.thumb.active { border-color:var(--accent); }
+100|.thumb-number { position:absolute; top:4px; left:6px; font-size:10px; color:var(--text3); font-weight:700; }
+101|.thumb-delete { position:absolute; top:4px; right:6px; width:18px; height:18px; border-radius:50%; background:var(--danger); color:#fff; font-size:10px; display:none; align-items:center; justify-content:center; cursor:pointer; }
+102|.thumb:hover .thumb-delete { display:flex; }
+103|.thumb-title { font-size:11px; font-weight:600; line-height:1.3; word-break:break-word; }
+104|
+105|/* ========== MODALS ========== */
+106|.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:1000; }
+107|.modal-overlay.show { display:flex; }
+108|.modal { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; }
+109|.modal h2 { margin-bottom:16px; font-size:18px; }
+110|.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+111|
+112|/* ========== AI BUILDER ========== */
+113|.ai-builder { }
+114|.ai-builder textarea { width:100%; min-height:100px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; resize:vertical; }
+115|.ai-presets { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+116|.ai-preset { padding:6px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:20px; font-size:12px; cursor:pointer; }
+117|.ai-preset:hover { border-color:var(--accent); }
+118|
+119|/* ========== VOICE COMMAND BAR ========== */
+120|.voice-bar { position:fixed; bottom:140px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:200; }
+121|.voice-indicator { padding:8px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:30px; display:none; align-items:center; gap:8px; font-size:13px; }
+122|.voice-indicator.show { display:flex; }
+123|.voice-indicator.listening { border-color:var(--success); }
+124|.voice-indicator .dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1s infinite; }
+125|@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+126|
+127|/* ========== SCRIPTURE DETECTION QUEUE ========== */
+128|.detection-panel { position:absolute; bottom:132px; right:16px; width:360px; max-height:400px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; z-index:150; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.5); transition:transform .3s, opacity .3s; }
+129|.detection-panel.hidden-panel { transform:translateY(20px); opacity:0; pointer-events:none; }
+130|.detection-header { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--bg3); }
+131|.detection-header-title { font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; }
+132|.detection-header-title .pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1s infinite; }
+133|.detection-list { flex:1; overflow-y:auto; padding:8px; }
+134|.detection-empty { text-align:center; padding:24px 12px; color:var(--text3); font-size:12px; }
+135|.detection-item { display:flex; align-items:center; padding:10px; border-radius:8px; margin-bottom:6px; background:var(--bg3); border:1px solid var(--border); transition:all .2s; animation:slideIn .3s; }
+136|@keyframes slideIn { from{transform:translateX(20px);opacity:0;} to{transform:translateX(0);opacity:1;} }
+137|.detection-item.high { border-left:3px solid var(--success); }
+138|.detection-item.med { border-left:3px solid var(--warn); }
+139|.detection-item.low { border-left:3px solid var(--text3); }
+140|.detection-item .det-ref { font-weight:700; font-size:14px; flex:1; }
+141|.detection-item .det-confidence { font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:600; }
+142|.detection-item .det-confidence.high { background:var(--success); color:#fff; }
+143|.detection-item .det-confidence.med { background:var(--warn); color:#000; }
+144|.detection-item .det-confidence.low { background:var(--text3); color:#fff; }
+145|.detection-item .det-actions { display:flex; gap:4px; margin-left:8px; }
+146|.detection-item .det-btn { width:28px; height:28px; border-radius:6px; border:none; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; }
+147|.detection-item .det-btn.send { background:var(--success); color:#fff; }
+148|.detection-item .det-btn.dismiss { background:var(--danger); color:#fff; }
+149|.detection-item .det-btn.preview { background:var(--accent); color:#fff; }
+150|.detection-item .det-preview-text { font-size:11px; color:var(--text2); margin-top:4px; line-height:1.4; max-height:40px; overflow:hidden; text-overflow:ellipsis; }
+151|.detection-footer { padding:8px 14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text3); }
+152|.detection-mode-toggle { display:flex; align-items:center; gap:6px; cursor:pointer; }
+153|.detection-mode-toggle .toggle { transform:scale(.8); }
+154|
+155|/* ========== LIVE TRANSCRIPT ========== */
+156|.transcript-overlay { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); max-width:80%; padding:8px 16px; background:rgba(0,0,0,.7); border-radius:8px; font-size:13px; color:var(--text2); z-index:10; display:none; text-align:center; }
+157|.transcript-overlay.show { display:block; }
+158|.transcript-overlay .highlight { color:var(--accent3); font-weight:600; }
+159|
+160|/* ========== STATUS ========== */
+161|.status-overlay { position:absolute; top:12px; left:12px; background:rgba(0,0,0,.6); padding:6px 12px; border-radius:6px; font-size:12px; color:var(--text2); display:flex; gap:12px; align-items:center; z-index:10; }
+162|.status-overlay .live-dot { width:6px; height:6px; border-radius:50%; background:var(--danger); }
+163|
+164|/* ========== SETTINGS ========== */
+165|.settings-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+166|.settings-row:last-child { border:none; }
+167|.toggle { width:44px; height:24px; background:var(--bg); border-radius:12px; position:relative; cursor:pointer; border:1px solid var(--border); }
+168|.toggle.on { background:var(--success); }
+169|.toggle::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition:transform .2s; }
+170|.toggle.on::after { transform:translateX(20px); }
+171|
+172|/* ========== UTIL ========== */
+173|.hidden { display:none !important; }
+174|.fade-in { animation:fadeIn .3s; }
+175|@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+176|</style>
+177|</head>
+178|<body>
+179|
+180|<div class="app">
+181|  <!-- SIDEBAR -->
+182|  <div class="sidebar">
+183|    <div class="sidebar-header">
+184|      <div>
+185|        <div class="logo">+ CrossPresenter</div>
+186|        <div class="logo-sub">AI Church Presentation</div>
+187|      </div>
+188|    </div>
+189|    <div class="deck-list" id="deckList"></div>
+190|    <div class="sidebar-actions">
+191|      <button class="btn btn-primary" onclick="openAIBuilder()"> Build with AI</button>
+192|      <button class="btn btn-secondary" onclick="openSermonPrep()"> Sermon Prep</button>
+193|      <button class="btn btn-secondary" onclick="newDeck()"> New Deck</button>
+194|      <button class="btn btn-secondary" onclick="openSettings()"> Settings</button>
+195|    </div>
+196|  </div>
+197|
+198|  <!-- MAIN -->
+199|  <div class="main">
+200|    <div class="topbar">
+201|      <div class="topbar-title" id="topbarTitle">No deck selected</div>
+202|      <div class="topbar-controls">
+203|        <button class="btn btn-sm btn-secondary" id="voiceBtn" onclick="toggleVoice()"> Voice + AI</button>
+204|        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()"> Edit</button>
+205|        <button class="btn btn-sm btn-success" onclick="present()"> Present</button>
+206|      </div>
+207|    </div>
+208|
+209|    <div class="preview-area" id="previewArea">
+210|      <div class="status-overlay" id="statusOverlay">
+211|        <span class="live-dot hidden" id="liveDot"></span>
+212|        <span id="statusText">Ready</span>
+213|        <span id="slideCounter">0 / 0</span>
+214|      </div>
+215|      <div class="preview-frame" id="previewFrame">
+216|        <div class="slide-canvas" id="slideCanvas">
+217|          <div style="text-align:center;color:var(--text3);">
+218|            <h2 style="font-size:2rem;margin-bottom:.5em;">Welcome to CrossPresenter</h2>
+219|            <p>Select or create a deck to get started</p>
+220|            <p style="margin-top:1em;font-size:.9rem;">Try "Build with AI" to generate a service in seconds</p>
+221|          </div>
+222|        </div>
+223|      </div>
+224|
+225|      <!-- Voice indicator -->
+226|      <div class="voice-bar">
+227|        <div class="voice-indicator" id="voiceIndicator">
+228|          <div class="dot"></div>
+229|          <span id="voiceText">Listening...</span>
+230|        </div>
+231|      </div>
+232|
+233|      <!-- Scripture Detection Queue -->
+234|      <div class="detection-panel hidden-panel" id="detectionPanel">
+235|        <div class="detection-header">
+236|          <div class="detection-header-title">
+237|            <span class="pulse-dot" id="detectionPulse"></span>
+238|            AI Scripture Detection
+239|          </div>
+240|          <button class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="clearDetectionQueue()">Clear</button>
+241|        </div>
+242|        <div class="detection-list" id="detectionList">
+243|          <div class="detection-empty" id="detectionEmpty">No scriptures detected yet.<br>Start speaking to see AI detection in action.</div>
+244|        </div>
+245|        <div class="detection-footer">
+246|          <div class="detection-mode-toggle" onclick="toggleAutoDisplay()">
+247|            <div class="toggle" id="autoDisplayToggle"></div>
+248|            <span>Auto-display detected verses</span>
+249|          </div>
+250|          <span id="detectionCount">0 detected</span>
+251|        </div>
+252|      </div>
+253|
+254|      <!-- Live Transcript Overlay -->
+255|      <div class="transcript-overlay" id="transcriptOverlay"></div>
+256|    </div>
+257|
+258|    <!-- Thumbnail strip -->
+259|    <div class="thumb-strip" id="thumbStrip"></div>
+260|
+261|    <!-- Editor Panel -->
+262|    <div class="editor-panel" id="editorPanel">
+263|      <div class="editor-header">
+264|        <h2 style="font-size:16px;">Edit Slide</h2>
+265|        <button class="btn btn-sm btn-secondary" onclick="toggleEditor()"></button>
+266|      </div>
+267|      <div class="editor-body" id="editorBody"></div>
+268|    </div>
+269|  </div>
+270|</div>
+271|
+272|<!-- MODALS -->
+273|<div class="modal-overlay" id="modalOverlay">
+274|  <div class="modal" id="modalContent"></div>
+275|</div>
+276|
+277|<script>
+278|// ============================================================
+279|// CROSSPRESENTER — AI Church Presentation PWA
+280|// ============================================================
+281|
+282|const App = {
+283|  decks: [],
+284|  currentDeckId: null,
+285|  currentSlideIdx: 0,
+286|  isPresenting: false,
+287|  voiceListening: false,
+288|  settings: {
+289|    bibleVersion: 'KJV',
+290|    aiApiKey: '',
+291|    aiProvider: 'openai',
+292|    autoAdvance: false,
+293|    voiceCommands: true,
+294|  },
+295|  recognition: null,
+296|  bibleCache: {},
+297|};
+298|
+299|// ---------- PERSISTENCE ----------
+300|function save() {
+301|  localStorage.setItem('crosspresenter', JSON.stringify({
+302|    decks: App.decks,
+303|    settings: App.settings,
+304|  }));
+305|}
+306|
+307|function load() {
+308|  const raw = localStorage.getItem('crosspresenter');
+309|  if (raw) {
+310|    const data = JSON.parse(raw);
+311|    App.decks = data.decks || [];
+312|    if (data.settings) Object.assign(App.settings, data.settings);
+313|  }
+314|  if (App.decks.length === 0) {
+315|    createDemoDeck();
+316|  }
+317|}
+318|
+319|function createDemoDeck() {
+320|  const deck = {
+321|    id: 'demo-' + Date.now(),
+322|    title: 'Sunday Service — Demo',
+323|    created: Date.now(),
+324|    slides: [
+325|      { type:'welcome', bg:'gradient', title:'Welcome to Church', subtitle:'We\'re glad you\'re here' },
+326|      { type:'worship', bg:'worship', lyrics:'How great is our God\nSing with me\nHow great is our God', title:'How Great Is Our God' },
+327|      { type:'verse', bg:'black', verseRef:'John 3:16', verseText:'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.' },
+328|      { type:'announcement', bg:'gradient', title:'Upcoming Events', text:'Wednesday Bible Study — 7pm\nFriday Youth Night — 6pm\nSunday Service — 10am' },
+329|      { type:'blank', bg:'black' },
+330|    ],
+331|  };
+332|  App.decks.push(deck);
+333|  App.currentDeckId = deck.id;
+334|  save();
+335|}
+336|
+337|// ---------- DECK MANAGEMENT ----------
+338|function newDeck() {
+339|  const deck = {
+340|    id: 'deck-' + Date.now(),
+341|    title: 'New Deck',
+342|    created: Date.now(),
+343|    slides: [
+344|      { type:'welcome', bg:'gradient', title:'Welcome', subtitle:'' },
+345|    ],
+346|  };
+347|  App.decks.push(deck);
+348|  App.currentDeckId = deck.id;
+349|  App.currentSlideIdx = 0;
+350|  save();
+351|  renderAll();
+352|}
+353|
+354|function getDeck() { return App.decks.find(d => d.id === App.currentDeckId); }
+355|
+356|function deleteDeck(id) {
+357|  App.decks = App.decks.filter(d => d.id !== id);
+358|  if (App.currentDeckId === id) App.currentDeckId = App.decks[0]?.id || null;
+359|  save();
+360|  renderAll();
+361|}
+362|
+363|// ---------- SLIDE RENDERING ----------
+364|function renderSlide(slide, container) {
+365|  const div = document.createElement('div');
+366|  div.className = `slide bg-${slide.bg || 'black'}`;
+367|
+368|  switch(slide.type) {
+369|    case 'welcome':
+370|      div.innerHTML = `<h1>${esc(slide.title || '')}</h1><p style="margin-top:.5em;opacity:.8;">${esc(slide.subtitle || '')}</p>`;
+371|      break;
+372|    case 'worship':
+373|      div.innerHTML = slide.title ? `<h2 style="margin-bottom:.3em;">${esc(slide.title)}</h2>` : '';
+374|      div.innerHTML += `<div class="lyrics">${esc(slide.lyrics || '')}</div>`;
+375|      break;
+376|    case 'verse':
+377|      div.innerHTML = `<p>${esc(slide.verseText || 'Loading verse...')}</p><div class="verse-ref">— ${esc(slide.verseRef || '')}</div>`;
+378|      break;
+379|    case 'announcement':
+380|      div.innerHTML = `<h2 style="margin-bottom:.5em;">${esc(slide.title || '')}</h2><p style="white-space:pre-line;">${esc(slide.text || '')}</p>`;
+381|      break;
+382|    case 'countdown':
+383|      div.innerHTML = `<div class="countdown" id="countdownEl">${formatCountdown(slide.seconds || 300)}</div>`;
+384|      break;
+385|    case 'notification':
+386|      div.innerHTML = `<div class="notification">${esc(slide.text || '')}</div>`;
+387|      break;
+388|    case 'image':
+389|      div.innerHTML = slide.url ? `<img src="${slide.url}" style="max-width:100%;max-height:100%;object-fit:contain;">` : `<p>Image slide</p>`;
+390|      break;
+391|    case 'video':
+392|      div.innerHTML = slide.url ? `<video src="${slide.url}" autoplay loop style="max-width:100%;max-height:100%;"></video>` : `<p>Video slide</p>`;
+393|      break;
+394|    case 'blank':
+395|    default:
+396|      break;
+397|  }
+398|
+399|  container.appendChild(div);
+400|  return div;
+401|}
+402|
+403|function renderCurrentSlide() {
+404|  const deck = getDeck();
+405|  const canvas = document.getElementById('slideCanvas');
+406|  canvas.innerHTML = '';
+407|
+408|  if (!deck || !deck.slides.length) {
+409|    canvas.innerHTML = `<div style="text-align:center;color:var(--text3);"><p>This deck has no slides</p><button class="btn btn-primary" style="margin-top:1em;" onclick="addSlide()">Add Slide</button></div>`;
+410|    updateStatus();
+411|    return;
+412|  }
+413|
+414|  deck.slides.forEach((slide, i) => {
+415|    const el = renderSlide(slide, canvas);
+416|    if (i === App.currentSlideIdx) el.classList.add('active');
+417|  });
+418|
+419|  updateStatus();
+420|}
+421|
+422|function goToSlide(idx) {
+423|  const deck = getDeck();
+424|  if (!deck) return;
+425|  App.currentSlideIdx = Math.max(0, Math.min(idx, deck.slides.length - 1));
+426|  renderCurrentSlide();
+427|  renderThumbs();
+428|  save();
+429|}
+430|
+431|function nextSlide() { goToSlide(App.currentSlideIdx + 1); }
+432|function prevSlide() { goToSlide(App.currentSlideIdx - 1); }
+433|
+434|// ---------- STATUS ----------
+435|function updateStatus() {
+436|  const deck = getDeck();
+437|  const counter = document.getElementById('slideCounter');
+438|  const title = document.getElementById('topbarTitle');
+439|  if (deck) {
+440|    counter.textContent = `${App.currentSlideIdx + 1} / ${deck.slides.length}`;
+441|    title.textContent = deck.title;
+442|  } else {
+443|    counter.textContent = '0 / 0';
+444|    title.textContent = 'No deck selected';
+445|  }
+446|}
+447|
+448|// ---------- THUMBNAILS ----------
+449|function renderThumbs() {
+450|  const deck = getDeck();
+451|  const strip = document.getElementById('thumbStrip');
+452|  strip.innerHTML = '';
+453|
+454|  if (!deck) return;
+455|
+456|  // Add slide button
+457|  const addBtn = document.createElement('div');
+458|  addBtn.className = 'thumb';
+459|  addBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--accent2);';
+460|  addBtn.innerHTML = '+';
+461|  addBtn.onclick = () => addSlide();
+462|  strip.appendChild(addBtn);
+463|
+464|  deck.slides.forEach((slide, i) => {
+465|    const thumb = document.createElement('div');
+466|    thumb.className = 'thumb' + (i === App.currentSlideIdx ? ' active' : '');
+467|    thumb.style.background = getBgColor(slide.bg);
+468|    thumb.innerHTML = `
+469|      <span class="thumb-number">${i + 1}</span>
+470|      <span class="thumb-delete" onclick="event.stopPropagation();deleteSlide(${i})"></span>
+471|      <span class="thumb-title" style="color:${getFgColor(slide.bg)}">${getThumbTitle(slide)}</span>
+472|    `;
+473|    thumb.onclick = () => goToSlide(i);
+474|    thumb.ondblclick = () => { goToSlide(i); openEditor(i); };
+475|    strip.appendChild(thumb);
+476|  });
+477|}
+478|
+479|function getBgColor(bg) {
+480|  const map = { black:'#000', white:'#fff', gradient:'#1a1a3a', worship:'#1a1a4a', nature:'#0d4f3c' };
+481|  return map[bg] || '#000';
+482|}
+483|function getFgColor(bg) {
+484|  return bg === 'white' ? '#000' : '#fff';
+485|}
+486|function getThumbTitle(slide) {
+487|  switch(slide.type) {
+488|    case 'welcome': return slide.title || 'Welcome';
+489|    case 'worship': return slide.title || 'Worship';
+490|    case 'verse': return slide.verseRef || 'Verse';
+491|    case 'announcement': return slide.title || 'Announcement';
+492|    case 'countdown': return 'Countdown';
+493|    case 'notification': return slide.text || 'Notification';
+494|    case 'image': return 'Image';
+495|    case 'video': return 'Video';
+496|    case 'blank': return '— Blank —';
+497|    default: return 'Slide';
+498|  }
+499|}
+500|
+501|
+501|// ---------- SLIDE MANAGEMENT ----------
+502|function addSlide(type='welcome') {
+503|  const deck = getDeck();
+504|  if (!deck) return;
+505|  const templates = {
+506|    welcome: { type:'welcome', bg:'gradient', title:'New Welcome', subtitle:'' },
+507|    worship: { type:'worship', bg:'worship', title:'', lyrics:'' },
+508|    verse: { type:'verse', bg:'black', verseRef:'', verseText:'' },
+509|    announcement: { type:'announcement', bg:'gradient', title:'Announcement', text:'' },
+510|    blank: { type:'blank', bg:'black' },
+511|    countdown: { type:'countdown', bg:'gradient', seconds:300 },
+512|    notification: { type:'notification', bg:'black', text:'' },
+513|    image: { type:'image', bg:'black', url:'' },
+514|    video: { type:'video', bg:'black', url:'' },
+515|  };
+516|  deck.slides.push(templates[type] || templates.welcome);
+517|  App.currentSlideIdx = deck.slides.length - 1;
+518|  save();
+519|  renderAll();
+520|  openEditor(App.currentSlideIdx);
+521|}
+522|
+523|function deleteSlide(idx) {
+524|  const deck = getDeck();
+525|  if (!deck) return;
+526|  deck.slides.splice(idx, 1);
+527|  if (App.currentSlideIdx >= deck.slides.length) App.currentSlideIdx = deck.slides.length - 1;
+528|  if (App.currentSlideIdx < 0) App.currentSlideIdx = 0;
+529|  save();
+530|  renderAll();
+531|}
+532|
+533|// ---------- EDITOR ----------
+534|let editingSlideIdx = null;
+535|
+536|function toggleEditor() {
+537|  const panel = document.getElementById('editorPanel');
+538|  if (panel.classList.contains('open')) {
+539|    panel.classList.remove('open');
+540|  } else {
+541|    if (editingSlideIdx === null) editingSlideIdx = App.currentSlideIdx;
+542|    openEditor(editingSlideIdx);
+543|  }
+544|}
+545|
+546|function openEditor(idx) {
+547|  const deck = getDeck();
+548|  if (!deck || idx === null || idx === undefined || idx < 0 || idx >= deck.slides.length) return;
+549|  editingSlideIdx = idx;
+550|  const slide = deck.slides[idx];
+551|  const body = document.getElementById('editorBody');
+552|
+553|  const typeOptions = [
+554|    ['welcome','Welcome'], ['worship','Worship'], ['verse','Verse'],
+555|    ['announcement','Announcement'], ['blank','Blank'],
+556|    ['countdown','Countdown'], ['notification','Notification'],
+557|    ['image','Image'], ['video','Video'],
+558|  ];
+559|
+560|  const bgOptions = [
+561|    ['black','Black'], ['white','White'], ['gradient','Purple Gradient'],
+562|    ['worship','Worship Blue'], ['nature','Nature Green'],
+563|  ];
+564|
+565|  let html = `
+566|    <div class="editor-field">
+567|      <label>Slide Type</label>
+568|      <div class="slide-type-grid">
+569|        ${typeOptions.map(([val,label]) =>
+570|          `<div class="slide-type-btn ${slide.type===val?'selected':''}" onclick="changeSlideType('${val}')">${label}</div>`
+571|        ).join('')}
+572|      </div>
+573|    </div>
+574|    <div class="editor-field">
+575|      <label>Background</label>
+576|      <select onchange="updateSlideField('bg', this.value)">
+577|        ${bgOptions.map(([val,label]) => `<option value="${val}" ${slide.bg===val?'selected':''}>${label}</option>`).join('')}
+578|      </select>
+579|    </div>
+580|  `;
+581|
+582|  // Type-specific fields
+583|  switch(slide.type) {
+584|    case 'welcome':
+585|      html += textField('title','Title',slide.title);
+586|      html += textField('subtitle','Subtitle',slide.subtitle);
+587|      break;
+588|    case 'worship':
+589|      html += textField('title','Song Title',slide.title);
+590|      html += textAreaField('lyrics','Lyrics (one line per slide phrase)',slide.lyrics);
+591|      break;
+592|    case 'verse':
+593|      html += textField('verseRef','Verse Reference',slide.verseRef);
+594|      html += `<button class="btn btn-sm btn-primary" style="margin-bottom:12px;" onclick="lookupVerse()"> Fetch Verse from Bible API</button>`;
+595|      html += textAreaField('verseText','Verse Text',slide.verseText);
+596|      break;
+597|    case 'announcement':
+598|      html += textField('title','Title',slide.title);
+599|      html += textAreaField('text','Content',slide.text);
+600|      break;
+601|    case 'countdown':
+602|      html += numberField('seconds','Duration (seconds)',slide.seconds||300);
+603|      break;
+604|    case 'notification':
+605|      html += textAreaField('text','Message',slide.text);
+606|      break;
+607|    case 'image':
+608|    case 'video':
+609|      html += textField('url','Media URL',slide.url);
+610|      break;
+611|  }
+612|
+613|  html += `
+614|    <div style="margin-top:20px;display:flex;gap:8px;">
+615|      <button class="btn btn-sm btn-danger" onclick="deleteSlide(${idx});closeEditor()"> Delete</button>
+616|      <button class="btn btn-sm btn-secondary" onclick="duplicateSlide(${idx})"> Duplicate</button>
+617|    </div>
+618|  `;
+619|
+620|  body.innerHTML = html;
+621|  document.getElementById('editorPanel').classList.add('open');
+622|}
+623|
+624|function closeEditor() {
+625|  document.getElementById('editorPanel').classList.remove('open');
+626|  editingSlideIdx = null;
+627|}
+628|
+629|function changeSlideType(type) {
+630|  if (editingSlideIdx === null) return;
+631|  const deck = getDeck();
+632|  const slide = deck.slides[editingSlideIdx];
+633|  slide.type = type;
+634|  // Initialize missing fields
+635|  const defaults = {
+636|    title:'', subtitle:'', lyrics:'', verseRef:'', verseText:'',
+637|    text:'', url:'', seconds:300,
+638|  };
+639|  Object.keys(defaults).forEach(k => { if (!(k in slide)) slide[k] = defaults[k]; });
+640|  save();
+641|  openEditor(editingSlideIdx);
+642|  renderCurrentSlide();
+643|  renderThumbs();
+644|}
+645|
+646|function updateSlideField(field, value) {
+647|  if (editingSlideIdx === null) return;
+648|  const deck = getDeck();
+649|  deck.slides[editingSlideIdx][field] = value;
+650|  save();
+651|  renderCurrentSlide();
+652|  renderThumbs();
+653|}
+654|
+655|function duplicateSlide(idx) {
+656|  const deck = getDeck();
+657|  const copy = JSON.parse(JSON.stringify(deck.slides[idx]));
+658|  deck.slides.splice(idx + 1, 0, copy);
+659|  App.currentSlideIdx = idx + 1;
+660|  editingSlideIdx = idx + 1;
+661|  save();
+662|  renderAll();
+663|  openEditor(idx + 1);
+664|}
+665|
+666|// Editor field helpers
+667|function textField(field, label, value) {
+668|  return `<div class="editor-field"><label>${label}</label><input type="text" value="${esc(value||'')}" onchange="updateSlideField('${field}',this.value)"></div>`;
+669|}
+670|function textAreaField(field, label, value) {
+671|  return `<div class="editor-field"><label>${label}</label><textarea onchange="updateSlideField('${field}',this.value)">${esc(value||'')}</textarea></div>`;
+672|}
+673|function numberField(field, label, value) {
+674|  return `<div class="editor-field"><label>${label}</label><input type="number" value="${value||''}" onchange="updateSlideField('${field}',parseInt(this.value))"></div>`;
+675|}
+676|
+677|// ---------- DECK LIST ----------
+678|function renderDeckList() {
+679|  const list = document.getElementById('deckList');
+680|  list.innerHTML = '';
+681|  App.decks.forEach(deck => {
+682|    const item = document.createElement('div');
+683|    item.className = 'deck-item' + (deck.id === App.currentDeckId ? ' active' : '');
+684|    const date = new Date(deck.created).toLocaleDateString();
+685|    item.innerHTML = `
+686|      <div class="deck-item-title">${esc(deck.title)}</div>
+687|      <div class="deck-item-meta">${deck.slides.length} slides · ${date}</div>
+688|    `;
+689|    item.onclick = () => {
+690|      App.currentDeckId = deck.id;
+691|      App.currentSlideIdx = 0;
+692|      editingSlideIdx = null;
+693|      renderAll();
+694|    };
+695|    item.oncontextmenu = (e) => { e.preventDefault(); renameDeck(deck.id); };
+696|    list.appendChild(item);
+697|  });
+698|}
+699|
+700|function renameDeck(id) {
+701|  const deck = App.decks.find(d => d.id === id);
+702|  const name = prompt('Deck name:', deck.title);
+703|  if (name) { deck.title = name; save(); renderDeckList(); updateStatus(); }
+704|}
+705|
+706|// ---------- BIBLE API ----------
+707|async function lookupVerse() {
+708|  const deck = getDeck();
+709|  if (!deck || editingSlideIdx === null) return;
+710|  const slide = deck.slides[editingSlideIdx];
+711|  if (!slide.verseRef) { alert('Enter a verse reference first'); return; }
+712|
+713|  const ref = slide.verseRef.trim().replace(/\s+/g, '+');
+714|  const version = App.settings.bibleVersion || 'KJV';
+715|  const cacheKey = `${ref}-${version}`;
+716|
+717|  if (App.bibleCache[cacheKey]) {
+718|    slide.verseText = App.bibleCache[cacheKey];
+719|    save(); renderCurrentSlide(); openEditor(editingSlideIdx);
+720|    return;
+721|  }
+722|
+723|  try {
+724|    const resp = await fetch(`https://bible-api.com/${ref}?translation=${version}`);
+725|    const data = await resp.json();
+726|    if (data.text) {
+727|      slide.verseText = data.text.trim();
+728|      App.bibleCache[cacheKey] = slide.verseText;
+729|      save(); renderCurrentSlide(); openEditor(editingSlideIdx);
+730|    } else {
+731|      alert('Verse not found');
+732|    }
+733|  } catch(e) {
+734|    alert('Failed to fetch verse: ' + e.message);
+735|  }
+736|}
+737|
+738|// Quick verse lookup from voice/command
+739|async function quickVerse(ref) {
+740|  const deck = getDeck();
+741|  if (!deck) return;
+742|  const refEncoded = ref.trim().replace(/\s+/g, '+');
+743|  const version = App.settings.bibleVersion || 'KJV';
+744|  const cacheKey = `${refEncoded}-${version}`;
+745|
+746|  let text;
+747|  if (App.bibleCache[cacheKey]) {
+748|    text = App.bibleCache[cacheKey];
+749|  } else {
+750|    const resp = await fetch(`https://bible-api.com/${refEncoded}?translation=${version}`);
+751|    const data = await resp.json();
+752|    text = data.text?.trim();
+753|    if (text) App.bibleCache[cacheKey] = text;
+754|  }
+755|
+756|  if (text) {
+757|    const slide = { type:'verse', bg:'black', verseRef:ref, verseText:text };
+758|    deck.slides.push(slide);
+759|    App.currentSlideIdx = deck.slides.length - 1;
+760|    save(); renderAll();
+761|    flashStatus(`${ref} added`);
+762|  } else {
+763|    flashStatus('Verse not found: ' + ref);
+764|  }
+765|}
+766|
+767|// ---------- VOICE COMMANDS ----------
+768|function toggleVoice() {
+769|  if (App.voiceListening) {
+770|    stopVoice();
+771|  } else {
+772|    startVoice();
+773|  }
+774|}
+775|
+776|function startVoice() {
+777|  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+778|  if (!SR) {
+779|    alert('Voice recognition not supported in this browser. Try Chrome or Edge.');
+780|    return;
+781|  }
+782|
+783|  App.recognition = new SR();
+784|  App.recognition.continuous = true;
+785|  App.recognition.interimResults = false;
+786|  App.recognition.lang = 'en-US';
+787|
+788|  App.recognition.onresult = (event) => {
+789|    const transcript = event.results[event.results.length - 1][0].transcript.trim();
+790|    console.log('Voice:', transcript);
+791|    const lower = transcript.toLowerCase();
+792|
+793|    // Show live transcript overlay
+794|    showTranscript(transcript);
+795|
+796|    // 1. Run scripture detection on everything spoken
+797|    const detections = detectScriptures(transcript);
+798|
+799|    // 2. Check for explicit voice commands
+800|    if (!isCommand(lower, detections)) {
+801|      // Not a command — feed to scripture detection
+802|      if (detections.length > 0) {
+803|        detections.forEach(d => addToDetectionQueue(d));
+804|      }
+805|    } else {
+806|      handleVoiceCommand(lower);
+807|    }
+808|  };
+809|
+810|  App.recognition.onerror = (e) => {
+811|    console.error('Voice error:', e.error);
+812|    if (e.error === 'not-allowed') {
+813|      alert('Microphone access denied. Please allow microphone access in your browser settings.');
+814|      stopVoice();
+815|    }
+816|  };
+817|
+818|  App.recognition.onend = () => {
+819|    if (App.voiceListening) {
+820|      try { App.recognition.start(); } catch(e) {}
+821|    }
+822|  };
+823|
+824|  try {
+825|    App.recognition.start();
+826|    App.voiceListening = true;
+827|    document.getElementById('voiceBtn').textContent = ' Listening';
+828|    document.getElementById('voiceBtn').classList.add('btn-danger');
+829|    document.getElementById('voiceBtn').classList.remove('btn-secondary');
+830|    document.getElementById('voiceIndicator').classList.add('show', 'listening');
+831|    document.getElementById('voiceText').textContent = 'Listening for commands...';
+832|    // Show scripture detection panel
+833|    document.getElementById('detectionPanel').classList.remove('hidden-panel');
+834|    document.getElementById('detectionPulse').style.display = 'inline-block';
+835|    flashStatus('Voice + Scripture Detection active');
+836|  } catch(e) {
+837|    console.error(e);
+838|  }
+839|}
+840|
+841|function stopVoice() {
+842|  App.voiceListening = false;
+843|  if (App.recognition) {
+844|    App.recognition.onend = null;
+845|    App.recognition.stop();
+846|    App.recognition = null;
+847|  }
+848|  document.getElementById('voiceBtn').textContent = ' Voice + AI';
+849|  document.getElementById('voiceBtn').classList.remove('btn-danger');
+850|  document.getElementById('voiceBtn').classList.add('btn-secondary');
+851|  document.getElementById('voiceIndicator').classList.remove('show', 'listening');
+852|  document.getElementById('detectionPanel').classList.add('hidden-panel');
+853|  document.getElementById('transcriptOverlay').classList.remove('show');
+854|  flashStatus('Voice commands off');
+855|}
+856|
+857|function handleVoiceCommand(transcript) {
+858|  document.getElementById('voiceText').textContent = `"${transcript}"`;
+859|
+860|  // Command patterns
+861|  const versePattern = /(?:bring up|show|display|pull up|go to)\s+([\w\s]+\d+:\d+(?:-\d+)?)/i;
+862|  const versePattern2 = /^([\w\s]+\d+:\d+(?:-\d+)?)$/i;
+863|
+864|  if (/next (?:slide )?please|next slide|go next|advance/i.test(transcript)) {
+865|    nextSlide();
+866|    flashStatus('Next slide');
+867|  } else if (/previous|go back|last slide|back/i.test(transcript)) {
+868|    prevSlide();
+869|    flashStatus('Previous slide');
+870|  } else if (/blank|black screen|clear/i.test(transcript)) {
+871|    addBlankSlide();
+872|    flashStatus('Blank screen');
+873|  } else if (/first slide|go to start|beginning/i.test(transcript)) {
+874|    goToSlide(0);
+875|    flashStatus('First slide');
+876|  } else if (/last slide|go to end|final slide/i.test(transcript)) {
+877|    const deck = getDeck();
+878|    if (deck) goToSlide(deck.slides.length - 1);
+879|    flashStatus('Last slide');
+880|  } else if (versePattern.test(transcript)) {
+881|    const match = transcript.match(versePattern);
+882|    quickVerse(match[1]);
+883|  } else if (versePattern2.test(transcript)) {
+884|    const match = transcript.match(versePattern2);
+885|    quickVerse(match[1]);
+886|  } else if (/countdown|timer/i.test(transcript)) {
+887|    const secondsMatch = transcript.match(/(\d+)\s*(?:minute|min|second|sec)/i);
+888|    const seconds = secondsMatch ? parseTimeStr(secondsMatch[0]) : 300;
+889|    addCountdownSlide(seconds);
+890|    flashStatus('Countdown added');
+891|  } else if (/announcement/i.test(transcript)) {
+892|    addSlide('announcement');
+893|    flashStatus('Announcement slide');
+894|  } else {
+895|    console.log('Unrecognized command:', transcript);
+896|    flashStatus(`Didn't catch: "${transcript}"`);
+897|  }
+898|}
+899|
+900|function addBlankSlide() {
+901|  const deck = getDeck();
+902|  if (!deck) return;
+903|  deck.slides.push({ type:'blank', bg:'black' });
+904|  App.currentSlideIdx = deck.slides.length - 1;
+905|  save(); renderAll();
+906|}
+907|
+908|function addCountdownSlide(seconds) {
+909|  const deck = getDeck();
+910|  if (!deck) return;
+911|  deck.slides.push({ type:'countdown', bg:'gradient', seconds });
+912|  App.currentSlideIdx = deck.slides.length - 1;
+913|  save(); renderAll();
+914|}
+915|
+916|function parseTimeStr(str) {
+917|  const m = str.match(/(\d+)\s*minute/i);
+918|  const s = str.match(/(\d+)\s*second/i);
+919|  let total = 0;
+920|  if (m) total += parseInt(m[1]) * 60;
+921|  if (s) total += parseInt(s[1]);
+922|  return total || 300;
+923|}
+924|
+925|// ============================================================
+926|// SCRIPTURE DETECTION ENGINE
+927|// ============================================================
+928|
+929|// Bible book names with aliases for fuzzy matching
+930|const BIBLE_BOOKS = [
+931|  // Old Testament
+932|  { name:'Genesis', aliases:['genesis','gen','ge'] },
+933|  { name:'Exodus', aliases:['exodus','exod','ex'] },
+934|  { name:'Leviticus', aliases:['leviticus','lev','lv'] },
+935|  { name:'Numbers', aliases:['numbers','num','nm'] },
+936|  { name:'Deuteronomy', aliases:['deuteronomy','deut','dt'] },
+937|  { name:'Joshua', aliases:['joshua','josh','jos'] },
+938|  { name:'Judges', aliases:['judges','judg','jdg'] },
+939|  { name:'Ruth', aliases:['ruth','rut','ru'] },
+940|  { name:'1 Samuel', aliases:['1 samuel','1 sam','1sam','first samuel','i samuel','first sam','1st samuel'] },
+941|  { name:'2 Samuel', aliases:['2 samuel','2 sam','2sam','second samuel','ii samuel','second sam','2nd samuel'] },
+942|  { name:'1 Kings', aliases:['1 kings','1 kgs','1ki','first kings','i kings','1st kings'] },
+943|  { name:'2 Kings', aliases:['2 kings','2 kgs','2ki','second kings','ii kings','2nd kings'] },
+944|  { name:'1 Chronicles', aliases:['1 chronicles','1 chron','1chr','first chronicles','i chronicles','1st chronicles'] },
+945|  { name:'2 Chronicles', aliases:['2 chronicles','2 chron','2chr','second chronicles','ii chronicles','2nd chronicles'] },
+946|  { name:'Ezra', aliases:['ezra','ezr'] },
+947|  { name:'Nehemiah', aliases:['nehemiah','neh'] },
+948|  { name:'Esther', aliases:['esther','est'] },
+949|  { name:'Job', aliases:['job'] },
+950|  { name:'Psalm', aliases:['psalm','psalms','ps','pss'] },
+951|  { name:'Proverbs', aliases:['proverbs','prov','prv'] },
+952|  { name:'Ecclesiastes', aliases:['ecclesiastes','eccles','ecc','eccl'] },
+953|  { name:'Song of Solomon', aliases:['song of solomon','song of songs','sos','song','canticles'] },
+954|  { name:'Isaiah', aliases:['isaiah','isa','is'] },
+955|  { name:'Jeremiah', aliases:['jeremiah','jer'] },
+956|  { name:'Lamentations', aliases:['lamentations','lam'] },
+957|  { name:'Ezekiel', aliases:['ezekiel','ezek','eze'] },
+958|  { name:'Daniel', aliases:['daniel','dan','dn'] },
+959|  { name:'Hosea', aliases:['hosea','hos'] },
+960|  { name:'Joel', aliases:['joel'] },
+961|  { name:'Amos', aliases:['amos','am'] },
+962|  { name:'Obadiah', aliases:['obadiah','obad','ob'] },
+963|  { name:'Jonah', aliases:['jonah','jon'] },
+964|  { name:'Micah', aliases:['micah','mic'] },
+965|  { name:'Nahum', aliases:['nahum','nah'] },
+966|  { name:'Habakkuk', aliases:['habakkuk','hab','habak'] },
+967|  { name:'Zephaniah', aliases:['zephaniah','zeph','zep'] },
+968|  { name:'Haggai', aliases:['haggai','hag'] },
+969|  { name:'Zechariah', aliases:['zechariah','zech','zec'] },
+970|  { name:'Malachi', aliases:['malachi','mal'] },
+971|  // New Testament
+972|  { name:'Matthew', aliases:['matthew','matt','mt'] },
+973|  { name:'Mark', aliases:['mark','mk'] },
+974|  { name:'Luke', aliases:['luke','lk'] },
+975|  { name:'John', aliases:['john','jn','joh'] },
+976|  { name:'Acts', aliases:['acts','ac'] },
+977|  { name:'Romans', aliases:['romans','rom','ro'] },
+978|  { name:'1 Corinthians', aliases:['1 corinthians','1 cor','1cor','first corinthians','i corinthians'] },
+979|  { name:'2 Corinthians', aliases:['2 corinthians','2 cor','2cor','second corinthians','ii corinthians'] },
+980|  { name:'Galatians', aliases:['galatians','gal'] },
+981|  { name:'Ephesians', aliases:['ephesians','eph'] },
+982|  { name:'Philippians', aliases:['philippians','phil','php'] },
+983|  { name:'Colossians', aliases:['colossians','col'] },
+984|  { name:'1 Thessalonians', aliases:['1 thessalonians','1 thess','1thess','first thessalonians','i thessalonians'] },
+985|  { name:'2 Thessalonians', aliases:['2 thessalonians','2 thess','2thess','second thessalonians','ii thessalonians'] },
+986|  { name:'1 Timothy', aliases:['1 timothy','1 tim','1tim','first timothy','i timothy'] },
+987|  { name:'2 Timothy', aliases:['2 timothy','2 tim','2tim','second timothy','ii timothy'] },
+988|  { name:'Titus', aliases:['titus','tit'] },
+989|  { name:'Philemon', aliases:['philemon','phm','phlm'] },
+990|  { name:'Hebrews', aliases:['hebrews','heb'] },
+991|  { name:'James', aliases:['james','jas','jm'] },
+992|  { name:'1 Peter', aliases:['1 peter','1 pet','1pet','first peter','i peter'] },
+993|  { name:'2 Peter', aliases:['2 peter','2 pet','2pet','second peter','ii peter'] },
+994|  { name:'1 John', aliases:['1 john','1 jn','1jn','first john','i john'] },
+995|  { name:'2 John', aliases:['2 john','2 jn','2jn','second john','ii john'] },
+996|  { name:'3 John', aliases:['3 john','3 jn','3jn','third john','iii john'] },
+997|  { name:'Jude', aliases:['jude','jd'] },
+998|  { name:'Revelation', aliases:['revelation','revelations','rev','re'] },
+999|];
+1000|
+1001|
+1001|// Detection state
+1002|App.detectionQueue = [];
+1003|App.autoDisplay = false;
+1004|App.recentDetections = new Set(); // dedupe within time window
+1005|
+1006|function detectScriptures(text) {
+1007|  const lower = text.toLowerCase();
+1008|  const detections = [];
+1009|
+1010|  // Pattern 1: "Book Chapter:Verse" or "Book Chapter:Verse-Verse" (standard format)
+1011|  // e.g., "John 3:16", "Romans 8:28", "Genesis 1:1-3", "1 Corinthians 13:4"
+1012|  const pattern1 = /\b((?:first|second|third|[123]\s)?\s*[\w]+(?:\s+\w+)?)\s+(\d+):(\d+)(?:-(\d+))?/gi;
+1013|
+1014|  // Pattern 2: "Book Chapter verse Verse" (spoken format)
+1015|  // e.g., "John chapter 3 verse 16", "Genesis chapter 1 verse 3", "First Corinthians 13 4"
+1016|  const pattern2 = /\b((?:first|second|third|[123]\s)?\s*[\w]+(?:\s+\w+)?)\s+(?:chapter\s+)?(\d+)\s+(?:verse\s+)?(\d+)(?:\s+(?:to|through|-)\s+(\d+))?/gi;
+1017|
+1018|  // Pattern 3: "Book Chapter colon Verse" (less common spoken)
+1019|  // Already covered by pattern1
+1020|
+1021|  let match;
+1022|  const found = new Set();
+1023|
+1024|  // Check pattern1
+1025|  while ((match = pattern1.exec(text)) !== null) {
+1026|    const [full, bookWord, chapter, verse, endVerse] = match;
+1027|    const resolved = resolveBook(bookWord.trim());
+1028|    if (resolved) {
+1029|      const ref = formatRef(resolved, chapter, verse, endVerse);
+1030|      if (!found.has(ref)) {
+1031|        found.add(ref);
+1032|        const confidence = scoreDetection(full, resolved, true);
+1033|        detections.push({ ref, book:resolved, chapter, verse, endVerse, confidence, context:full.trim() });
+1034|      }
+1035|    }
+1036|  }
+1037|
+1038|  // Check pattern2 (only if not already found by pattern1)
+1039|  pattern2.lastIndex = 0;
+1040|  while ((match = pattern2.exec(text)) !== null) {
+1041|    const [full, bookWord, chapter, verse, endVerse] = match;
+1042|    const resolved = resolveBook(bookWord.trim());
+1043|    if (resolved) {
+1044|      const ref = formatRef(resolved, chapter, verse, endVerse);
+1045|      if (!found.has(ref)) {
+1046|        found.add(ref);
+1047|        const confidence = scoreDetection(full, resolved, false);
+1048|        detections.push({ ref, book:resolved, chapter, verse, endVerse, confidence, context:full.trim() });
+1049|      }
+1050|    }
+1051|  }
+1052|
+1053|  return detections;
+1054|}
+1055|
+1056|function resolveBook(input) {
+1057|  const lower = input.toLowerCase().trim();
+1058|
+1059|  // Handle spoken "First/Second/Third" → "1/2/3"
+1060|  const spokenPrefix = lower.match(/^(first|second|third)\s+(.*)/);
+1061|  if (spokenPrefix) {
+1062|    const num = { first:'1', second:'2', third:'3' }[spokenPrefix[1]];
+1063|    const rest = spokenPrefix[2];
+1064|    // Try "1 Book" format
+1065|    for (const book of BIBLE_BOOKS) {
+1066|      for (const alias of book.aliases) {
+1067|        if (rest === alias || (alias.length > 2 && rest.startsWith(alias))) {
+1068|          // Verify this is a numbered book
+1069|          if (book.name.startsWith(num + ' ')) return book.name;
+1070|        }
+1071|      }
+1072|    }
+1073|  }
+1074|
+1075|  // Exact name match
+1076|  for (const book of BIBLE_BOOKS) {
+1077|    if (lower === book.name.toLowerCase()) return book.name;
+1078|  }
+1079|  // Alias match
+1080|  for (const book of BIBLE_BOOKS) {
+1081|    for (const alias of book.aliases) {
+1082|      if (lower === alias) return book.name;
+1083|    }
+1084|  }
+1085|  // Partial match (starts with)
+1086|  for (const book of BIBLE_BOOKS) {
+1087|    for (const alias of book.aliases) {
+1088|      if (lower === alias || (alias.length > 3 && lower.startsWith(alias))) return book.name;
+1089|    }
+1090|  }
+1091|  return null;
+1092|}
+1093|
+1094|function formatRef(book, chapter, verse, endVerse) {
+1095|  return `${book} ${chapter}:${verse}${endVerse ? '-' + endVerse : ''}`;
+1096|}
+1097|
+1098|function scoreDetection(rawText, book, hasColon) {
+1099|  let score = 50; // base
+1100|  // Colon format (explicit) = higher confidence
+1101|  if (hasColon) score += 20;
+1102|  // Longer book name = more specific = higher
+1103|  if (book.length > 5) score += 10;
+1104|  // Word "chapter" or "verse" present = explicit
+1105|  if (/chapter|verse/i.test(rawText)) score += 15;
+1106|  // Random noise check — single letter books like "J" are likely false positives
+1107|  if (/^\w\s+\d/.test(rawText) && book.length < 4) score -= 20;
+1108|  // Clamp
+1109|  return Math.max(30, Math.min(98, score));
+1110|}
+1111|
+1112|function isCommand(lower, detections) {
+1113|  // Check if the transcript is a voice command rather than sermon content
+1114|  if (/next (?:slide )?please|next slide|go next|advance/i.test(lower)) return true;
+1115|  if (/previous|go back|last slide/i.test(lower)) return true;
+1116|  if (/blank|black screen|clear/i.test(lower)) return true;
+1117|  if (/first slide|go to start|beginning/i.test(lower)) return true;
+1118|  if (/last slide|go to end|final slide/i.test(lower)) return true;
+1119|  if (/(?:bring up|show|display|pull up|go to)\s+[\w\s]+\d+:\d+/i.test(lower)) return true;
+1120|  if (/countdown|timer/i.test(lower)) return true;
+1121|  if (/announcement/i.test(lower)) return true;
+1122|  return false;
+1123|}
+1124|
+1125|function addToDetectionQueue(detection) {
+1126|  // Dedupe — don't add same ref within 30 seconds
+1127|  const now = Date.now();
+1128|  const key = detection.ref;
+1129|  if (App.recentDetections.has(key)) return;
+1130|  App.recentDetections.add(key);
+1131|  setTimeout(() => App.recentDetections.delete(key), 30000);
+1132|
+1133|  const item = {
+1134|    id: 'det-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+1135|    ref: detection.ref,
+1136|    confidence: detection.confidence,
+1137|    context: detection.context,
+1138|    timestamp: now,
+1139|    verseText: null,
+1140|    loading: false,
+1141|  };
+1142|  App.detectionQueue.unshift(item);
+1143|  if (App.detectionQueue.length > 20) App.detectionQueue.pop();
+1144|
+1145|  renderDetectionQueue();
+1146|
+1147|  // Auto-fetch verse text
+1148|  fetchDetectionVerse(item);
+1149|
+1150|  // Auto-display if enabled
+1151|  if (App.autoDisplay && detection.confidence >= 60) {
+1152|    setTimeout(() => sendDetectionToLive(item.id), 1500);
+1153|  }
+1154|}
+1155|
+1156|async function fetchDetectionVerse(item) {
+1157|  item.loading = true;
+1158|  try {
+1159|    const ref = item.ref.replace(/\s+/g, '+');
+1160|    const version = App.settings.bibleVersion || 'KJV';
+1161|    const cacheKey = `${ref}-${version}`;
+1162|    if (App.bibleCache[cacheKey]) {
+1163|      item.verseText = App.bibleCache[cacheKey];
+1164|    } else {
+1165|      const resp = await fetch(`https://bible-api.com/${ref}?translation=${version}`);
+1166|      const data = await resp.json();
+1167|      if (data.text) {
+1168|        item.verseText = data.text.trim();
+1169|        App.bibleCache[cacheKey] = item.verseText;
+1170|      }
+1171|    }
+1172|  } catch(e) { /* silent fail */ }
+1173|  item.loading = false;
+1174|  renderDetectionQueue();
+1175|}
+1176|
+1177|function renderDetectionQueue() {
+1178|  const list = document.getElementById('detectionList');
+1179|  const empty = document.getElementById('detectionEmpty');
+1180|  const countEl = document.getElementById('detectionCount');
+1181|
+1182|  if (App.detectionQueue.length === 0) {
+1183|    list.innerHTML = '<div class="detection-empty">No scriptures detected yet.<br>Start speaking to see AI detection in action.</div>';
+1184|    countEl.textContent = '0 detected';
+1185|    return;
+1186|  }
+1187|
+1188|  countEl.textContent = `${App.detectionQueue.length} detected`;
+1189|
+1190|  list.innerHTML = App.detectionQueue.map(item => {
+1191|    const confClass = item.confidence >= 75 ? 'high' : item.confidence >= 55 ? 'med' : 'low';
+1192|    const confLabel = item.confidence >= 75 ? 'High' : item.confidence >= 55 ? 'Medium' : 'Low';
+1193|    const versePreview = item.verseText ? `<div class="det-preview-text">${esc(item.verseText.substring(0, 100))}${item.verseText.length > 100 ? '...' : ''}</div>` : '';
+1194|
+1195|    return `
+1196|      <div class="detection-item ${confClass}">
+1197|        <div style="flex:1;">
+1198|          <div style="display:flex;align-items:center;">
+1199|            <span class="det-ref">${esc(item.ref)}</span>
+1200|            <span class="det-confidence ${confClass}">${item.confidence}%</span>
+1201|          </div>
+1202|          ${versePreview}
+1203|        </div>
+1204|        <div class="det-actions">
+1205|          <button class="det-btn preview" title="Preview" onclick="previewDetection('${item.id}')"></button>
+1206|          <button class="det-btn send" title="Send to Live" onclick="sendDetectionToLive('${item.id}')"></button>
+1207|          <button class="det-btn dismiss" title="Dismiss" onclick="dismissDetection('${item.id}')"></button>
+1208|        </div>
+1209|      </div>
+1210|    `;
+1211|  }).join('');
+1212|}
+1213|
+1214|function previewDetection(id) {
+1215|  const item = App.detectionQueue.find(d => d.id === id);
+1216|  if (!item) return;
+1217|  if (item.verseText) {
+1218|    const deck = getDeck();
+1219|    if (!deck) return;
+1220|    const slide = { type:'verse', bg:'black', verseRef:item.ref, verseText:item.verseText };
+1221|    deck.slides.push(slide);
+1222|    App.currentSlideIdx = deck.slides.length - 1;
+1223|    save(); renderAll();
+1224|    flashStatus(`Previewing ${item.ref}`);
+1225|  } else {
+1226|    flashStatus('Loading verse...');
+1227|  }
+1228|}
+1229|
+1230|function sendDetectionToLive(id) {
+1231|  const item = App.detectionQueue.find(d => d.id === id);
+1232|  if (!item) return;
+1233|  if (item.verseText) {
+1234|    const deck = getDeck();
+1235|    if (!deck) return;
+1236|    const slide = { type:'verse', bg:'black', verseRef:item.ref, verseText:item.verseText };
+1237|    deck.slides.push(slide);
+1238|    App.currentSlideIdx = deck.slides.length - 1;
+1239|    save(); renderAll();
+1240|    // Remove from queue
+1241|    App.detectionQueue = App.detectionQueue.filter(d => d.id !== id);
+1242|    renderDetectionQueue();
+1243|    flashStatus(`${item.ref} sent to live`);
+1244|  } else {
+1245|    flashStatus('Still loading verse text...');
+1246|    setTimeout(() => sendDetectionToLive(id), 2000);
+1247|  }
+1248|}
+1249|
+1250|function dismissDetection(id) {
+1251|  App.detectionQueue = App.detectionQueue.filter(d => d.id !== id);
+1252|  renderDetectionQueue();
+1253|}
+1254|
+1255|function clearDetectionQueue() {
+1256|  App.detectionQueue = [];
+1257|  renderDetectionQueue();
+1258|}
+1259|
+1260|function toggleAutoDisplay() {
+1261|  App.autoDisplay = !App.autoDisplay;
+1262|  document.getElementById('autoDisplayToggle').classList.toggle('on', App.autoDisplay);
+1263|  flashStatus(App.autoDisplay ? ' Auto-display ON — verses show automatically' : 'Auto-display OFF');
+1264|}
+1265|
+1266|function showTranscript(text) {
+1267|  const overlay = document.getElementById('transcriptOverlay');
+1268|  // Highlight any detected verse references in the transcript
+1269|  let display = esc(text);
+1270|  const verseRegex = /\b((?:\d\s)?[\w]+(?:\s\w+)?\s+\d+:\d+(?:-\d+)?)/g;
+1271|  display = display.replace(verseRegex, '<span class="highlight">$1</span>');
+1272|  overlay.innerHTML = display;
+1273|  overlay.classList.add('show');
+1274|  clearTimeout(overlay._timeout);
+1275|  overlay._timeout = setTimeout(() => overlay.classList.remove('show'), 8000);
+1276|}
+1277|
+1278|// ============================================================
+1279|// SERMON PREPARATION TOOL
+1280|// ============================================================
+1281|
+1282|function openSermonPrep() {
+1283|  const modal = document.getElementById('modalContent');
+1284|  modal.innerHTML = `
+1285|    <div>
+1286|      <h2>Sermon Preparation Tool</h2>
+1287|      <p style="color:var(--text2);margin-bottom:16px;font-size:13px;">AI-powered sermon prep — generate outlines, find scriptures, build your message, then export straight to a slide deck.</p>
+1288|
+1289|      <div id="sermonSteps" style="display:flex;gap:4px;margin-bottom:20px;">
+1290|        <div class="sermon-step active" data-step="1">1. Topic</div>
+1291|        <div class="sermon-step" data-step="2">2. Outline</div>
+1292|        <div class="sermon-step" data-step="3">3. Scriptures</div>
+1293|        <div class="sermon-step" data-step="4">4. Export</div>
+1294|      </div>
+1295|
+1296|      <div id="sermonStep1" class="sermon-step-content">
+1297|        <div class="editor-field">
+1298|          <label>Sermon Topic or Theme</label>
+1299|          <input type="text" id="sermonTopic" placeholder="e.g., God's grace in difficult times, The power of prayer, Walking by faith not sight" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
+1300|        </div>
+1301|        <div class="editor-field">
+1302|          <label>Additional Context (optional)</label>
+1303|          <textarea id="sermonContext" placeholder="Target audience, key message, desired length, specific angle..." style="width:100%;min-height:80px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;"></textarea>
+1304|        </div>
+1305|        <div class="editor-field">
+1306|          <label>Style</label>
+1307|          <select id="sermonStyle" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+1308|            <option value="expository">Expository (verse-by verse)</option>
+1309|            <option value="topical">Topical (theme-based)</option>
+1310|            <option value="textual">Textual ( anchored in a key verse)</option>
+1311|            <option value="narrative">Narrative (story-driven)</option>
+1312|          </select>
+1313|        </div>
+1314|        <div class="editor-field">
+1315|          <label>AI Provider</label>
+1316|          <select id="sermonProvider" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+1317|            <option value="openai" ${App.settings.aiProvider==='openai'?'selected':''}>OpenAI (GPT-4o)</option>
+1318|            <option value="anthropic" ${App.settings.aiProvider==='anthropic'?'selected':''}>Anthropic (Claude)</option>
+1319|            <option value="custom" ${App.settings.aiProvider==='custom'?'selected':''}>Custom (OpenAI-compatible)</option>
+1320|          </select>
+1321|        </div>
+1322|        <div class="editor-field">
+1323|          <label>API Key</label>
+1324|          <input type="password" id="sermonKey" value="${esc(App.settings.aiApiKey||'')}" placeholder="sk-..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+1325|        </div>
+1326|        <div id="sermonUrlWrap" class="editor-field" style="display:none;">
+1327|          <label>Custom API URL</label>
+1328|          <input type="text" id="sermonUrl" placeholder="https://api.example.com/v1/chat/completions" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+1329|        </div>
+1330|        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="generateSermonOutline()"> Generate Sermon Outline</button>
+1331|      </div>
+1332|
+1333|      <div id="sermonStep2" class="sermon-step-content" style="display:none;">
+1334|        <div id="sermonOutlineResult"></div>
+1335|        <div style="display:flex;gap:8px;margin-top:16px;">
+1336|          <button class="btn btn-secondary" onclick="sermonGoStep(1)">← Back</button>
+1337|          <button class="btn btn-primary" style="flex:1;" onclick="generateSermonScriptures()"> Find Scriptures</button>
+1338|        </div>
+1339|      </div>
+1340|
+1341|      <div id="sermonStep3" class="sermon-step-content" style="display:none;">
+1342|        <div id="sermonScriptureResult"></div>
+1343|        <div style="display:flex;gap:8px;margin-top:16px;">
+1344|          <button class="btn btn-secondary" onclick="sermonGoStep(2)">← Back</button>
+1345|          <button class="btn btn-primary" style="flex:1;" onclick="finalizeSermon()"> Build Slide Deck</button>
+1346|        </div>
+1347|      </div>
+1348|
+1349|      <div id="sermonStep4" class="sermon-step-content" style="display:none;">
+1350|        <div id="sermonExportResult"></div>
+1351|      </div>
+1352|
+1353|      <div class="modal-actions">
+1354|        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+1355|      </div>
+1356|    </div>
+1357|    <style>
+1358|      .sermon-step { flex:1; padding:8px; text-align:center; font-size:12px; font-weight:600; border-radius:8px; background:var(--bg3); color:var(--text3); }
+1359|      .sermon-step.active { background:var(--accent); color:#fff; }
+1360|      .sermon-step.done { background:var(--success); color:#fff; }
+1361|      .sermon-outline-point { padding:12px; background:var(--bg3); border-radius:8px; margin-bottom:8px; border-left:3px solid var(--accent); }
+1362|      .sermon-outline-point h4 { font-size:14px; margin-bottom:4px; }
+1363|      .sermon-outline-point p { font-size:13px; color:var(--text2); }
+1364|      .sermon-scripture-card { padding:12px; background:var(--bg3); border-radius:8px; margin-bottom:8px; border-left:3px solid var(--accent3); }
+1365|      .sermon-scripture-card .ref { font-weight:700; font-size:14px; margin-bottom:4px; }
+1366|      .sermon-scripture-card .text { font-size:13px; color:var(--text2); font-style:italic; }
+1367|      .sermon-scripture-card .usage { font-size:11px; color:var(--accent3); margin-top:4px; }
+1368|      .sermon-loading { text-align:center; padding:40px 20px; color:var(--text2); }
+1369|      .sermon-loading .spinner { font-size:32px; animation:spin 2s linear infinite; display:block; margin-bottom:12px; }
+1370|      @keyframes spin { 100% { transform:rotate(360deg); } }
+1371|    </style>
+1372|  `;
+1373|  document.getElementById('modalOverlay').classList.add('show');
+1374|
+1375|  // Show/hide custom URL field
+1376|  document.getElementById('sermonProvider').onchange = function() {
+1377|    document.getElementById('sermonUrlWrap').style.display = this.value === 'custom' ? 'block' : 'none';
+1378|  };
+1379|
+1380|  // Store sermon working data
+1381|  App.sermonData = { topic:'', context:'', style:'', outline:null, scriptures:[] };
+1382|}
+1383|
+1384|function sermonGoStep(step) {
+1385|  for (let i = 1; i <= 4; i++) {
+1386|    document.getElementById('sermonStep' + i).style.display = i === step ? 'block' : 'none';
+1387|  }
+1388|  document.querySelectorAll('.sermon-step').forEach(el => {
+1389|    const s = parseInt(el.dataset.step);
+1390|    el.classList.remove('active', 'done');
+1391|    if (s < step) el.classList.add('done');
+1392|    else if (s === step) el.classList.add('active');
+1393|  });
+1394|}
+1395|
+1396|async function generateSermonOutline() {
+1397|  const topic = document.getElementById('sermonTopic').value.trim();
+1398|  const context = document.getElementById('sermonContext').value.trim();
+1399|  const style = document.getElementById('sermonStyle').value;
+1400|  const provider = document.getElementById('sermonProvider').value;
+1401|  const key = document.getElementById('sermonKey').value.trim();
+1402|  let url = provider === 'custom' ? document.getElementById('sermonUrl').value.trim() : '';
+1403|
+1404|  if (!topic) { alert('Enter a sermon topic'); return; }
+1405|  if (!key) { alert('Enter your API key'); return; }
+1406|
+1407|  // Save settings
+1408|  App.settings.aiProvider = provider;
+1409|  App.settings.aiApiKey = key;
+1410|  save();
+1411|  App.sermonData = { topic, context, style, outline:null, scriptures:[] };
+1412|
+1413|  document.getElementById('sermonStep1').innerHTML = '<div class="sermon-loading"><span class="spinner">...</span>Generating sermon outline...</div>';
+1414|
+1415|  const prompt = `Create a ${style} sermon on the topic: "${topic}"${context ? '. Additional context: ' + context : ''}.
+1416|
+1417|Structure as JSON with:
+1418|{
+1419|  "title": "Sermon title",
+1420|  "theme": "One sentence theme",
+1421|  "introduction": "Opening hook and context (2-3 sentences)",
+1422|  "main_points": [
+1423|    {"title": "Point title", "description": "What this point covers (2-3 sentences)"}
+1424|  ],
+1425|  "conclusion": "Closing summary and call to action (2-3 sentences)",
+1426|  "suggested_scriptures": ["Reference 1", "Reference 2", "Reference 3-5"]
+1427|}
+1428|
+1429|Provide 3-4 main points. Respond with ONLY the JSON, no markdown.`;
+1430|
+1431|  try {
+1432|    let result;
+1433|    if (provider === 'openai' || provider === 'custom') {
+1434|      const apiUrl = url || 'https://api.openai.com/v1/chat/completions';
+1435|      result = await callOpenAICompatible(apiUrl, key, prompt, 'You are a sermon preparation assistant. Respond only with valid JSON.', provider === 'openai' ? 'gpt-4o' : undefined);
+1436|    } else if (provider === 'anthropic') {
+1437|      result = await callAnthropic(key, prompt, 'You are a sermon preparation assistant. Respond only with valid JSON.');
+1438|    }
+1439|
+1440|    const jsonMatch = result.match(/\{[\s\S]*\}/);
+1441|    const outline = JSON.parse(jsonMatch[0]);
+1442|    App.sermonData.outline = outline;
+1443|
+1444|    // Render outline
+1445|    const html = `
+1446|      <h3 style="font-size:18px;margin-bottom:4px;">${esc(outline.title)}</h3>
+1447|      <p style="color:var(--accent3);font-style:italic;margin-bottom:16px;font-size:13px;">${esc(outline.theme)}</p>
+1448|
+1449|      <div class="sermon-outline-point" style="border-left-color:var(--accent3);">
+1450|        <h4>Introduction</h4>
+1451|        <p>${esc(outline.introduction)}</p>
+1452|      </div>
+1453|
+1454|      ${outline.main_points.map((p, i) => `
+1455|        <div class="sermon-outline-point">
+1456|          <h4>${i+1}. ${esc(p.title)}</h4>
+1457|          <p>${esc(p.description)}</p>
+1458|        </div>
+1459|      `).join('')}
+1460|
+1461|      <div class="sermon-outline-point" style="border-left-color:var(--success);">
+1462|        <h4>Conclusion</h4>
+1463|        <p>${esc(outline.conclusion)}</p>
+1464|      </div>
+1465|
+1466|      ${outline.suggested_scriptures?.length ? `
+1467|        <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;">
+1468|          <strong style="font-size:13px;"> Suggested Scriptures:</strong>
+1469|          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+1470|            ${outline.suggested_scriptures.map(s => `<span style="padding:4px 10px;background:var(--bg3);border-radius:12px;font-size:12px;">${esc(s)}</span>`).join('')}
+1471|          </div>
+1472|        </div>
+1473|      ` : ''}
+1474|    `;
+1475|
+1476|    document.getElementById('sermonStep1').style.display = 'none';
+1477|    document.getElementById('sermonStep2').innerHTML = html + `
+1478|      <div style="display:flex;gap:8px;margin-top:16px;">
+1479|        <button class="btn btn-secondary" onclick="sermonGoStep(1)">← Edit Topic</button>
+1480|        <button class="btn btn-primary" style="flex:1;" onclick="generateSermonScriptures()"> Find Full Scriptures →</button>
+1481|      </div>
+1482|    `;
+1483|    sermonGoStep(2);
+1484|  } catch(e) {
+1485|    document.getElementById('sermonStep1').innerHTML = `<div style="padding:20px;color:var(--danger);"> Failed: ${esc(e.message)}</div>`;
+1486|  }
+1487|}
+1488|
+1489|async function generateSermonScriptures() {
+1490|  if (!App.sermonData.outline) return;
+1491|  const scriptures = App.sermonData.outline.suggested_scriptures || [];
+1492|  if (scriptures.length === 0) {
+1493|    sermonGoStep(3);
+1494|    document.getElementById('sermonStep3').innerHTML = '<p style="color:var(--text2);">No suggested scriptures to fetch. You can proceed to build the deck.</p><div style="margin-top:16px;"><button class="btn btn-primary" onclick="finalizeSermon()"> Build Slide Deck →</button></div>';
+1495|    return;
+1496|  }
+1497|
+1498|  document.getElementById('sermonStep2').style.display = 'none';
+1499|  document.getElementById('sermonStep3').innerHTML = '<div class="sermon-loading"><span class="spinner">...</span>Fetching scripture texts...</div>';
+1500|  sermonGoStep(3);
+1501|
+1501|
+1502|  const version = App.settings.bibleVersion || 'KJV';
+1503|  const fetched = [];
+1504|
+1505|  for (const ref of scriptures) {
+1506|    try {
+1507|      const refEncoded = ref.trim().replace(/\s+/g, '+');
+1508|      const cacheKey = `${refEncoded}-${version}`;
+1509|      let text;
+1510|      if (App.bibleCache[cacheKey]) {
+1511|        text = App.bibleCache[cacheKey];
+1512|      } else {
+1513|        const resp = await fetch(`https://bible-api.com/${refEncoded}?translation=${version}`);
+1514|        const data = await resp.json();
+1515|        text = data.text?.trim();
+1516|        if (text) App.bibleCache[cacheKey] = text;
+1517|      }
+1518|      if (text) {
+1519|        fetched.push({ ref: ref.trim(), text, usage: getScriptureUsage(ref, App.sermonData.outline) });
+1520|      }
+1521|    } catch(e) { /* skip */ }
+1522|  }
+1523|
+1524|  App.sermonData.scriptures = fetched;
+1525|
+1526|  const html = fetched.length > 0 ? fetched.map(s => `
+1527|    <div class="sermon-scripture-card">
+1528|      <div class="ref">${esc(s.ref)}</div>
+1529|      <div class="text">"${esc(s.text)}"</div>
+1530|      ${s.usage ? `<div class="usage">${esc(s.usage)}</div>` : ''}
+1531|    </div>
+1532|  `).join('') : '<p style="color:var(--text2);">Could not fetch scripture texts. Check your connection.</p>';
+1533|
+1534|  document.getElementById('sermonStep3').innerHTML = html + `
+1535|    <div style="display:flex;gap:8px;margin-top:16px;">
+1536|      <button class="btn btn-secondary" onclick="sermonGoStep(2)">← Back to Outline</button>
+1537|      <button class="btn btn-primary" style="flex:1;" onclick="finalizeSermon()"> Build Slide Deck →</button>
+1538|    </div>
+1539|  `;
+1540|}
+1541|
+1542|function getScriptureUsage(ref, outline) {
+1543|  // Try to match scripture to a main point
+1544|  if (!outline?.main_points) return '';
+1545|  for (const point of outline.main_points) {
+1546|    if (point.description && point.description.toLowerCase().includes(ref.toLowerCase().split(/\s/)[0].toLowerCase())) {
+1547|      return `Pairs with: ${point.title}`;
+1548|    }
+1549|  }
+1550|  return 'Supporting scripture';
+1551|}
+1552|
+1553|function finalizeSermon() {
+1554|  const data = App.sermonData;
+1555|  if (!data.outline) return;
+1556|
+1557|  const slides = [];
+1558|
+1559|  // Title slide
+1560|  slides.push({ type:'welcome', bg:'gradient', title:data.outline.title, subtitle:data.outline.theme || data.topic });
+1561|
+1562|  // Introduction
+1563|  slides.push({ type:'announcement', bg:'bg-gradient', title:'Introduction', text:data.outline.introduction });
+1564|
+1565|  // Scripture verses
+1566|  data.scriptures.forEach(s => {
+1567|    slides.push({ type:'verse', bg:'black', verseRef:s.ref, verseText:s.text });
+1568|  });
+1569|
+1570|  // Main points
+1571|  data.outline.main_points.forEach((point, i) => {
+1572|    slides.push({ type:'announcement', bg:'gradient', title:`Point ${i+1}: ${point.title}`, text:point.description });
+1573|  });
+1574|
+1575|  // Conclusion
+1576|  slides.push({ type:'announcement', bg:'nature', title:'Conclusion', text:data.outline.conclusion });
+1577|
+1578|  // Closing blank
+1579|  slides.push({ type:'blank', bg:'black' });
+1580|
+1581|  // Create deck
+1582|  const deck = {
+1583|    id: 'deck-' + Date.now(),
+1584|    title: data.outline.title || 'Sermon Deck',
+1585|    created: Date.now(),
+1586|    slides,
+1587|  };
+1588|
+1589|  App.decks.push(deck);
+1590|  App.currentDeckId = deck.id;
+1591|  App.currentSlideIdx = 0;
+1592|  save();
+1593|  closeModal();
+1594|  renderAll();
+1595|  flashStatus(`Sermon deck created with ${slides.length} slides!`);
+1596|
+1597|  // Show success step
+1598|  sermonGoStep(4);
+1599|}
+1600|
+1601|// ---------- COUNTDOWN TIMER ----------
+1602|let countdownInterval = null;
+1603|function startCountdown(seconds) {
+1604|  if (countdownInterval) clearInterval(countdownInterval);
+1605|  const el = document.getElementById('countdownEl');
+1606|  if (!el) return;
+1607|  let remaining = seconds;
+1608|  countdownInterval = setInterval(() => {
+1609|    remaining--;
+1610|    if (el) el.textContent = formatCountdown(remaining);
+1611|    if (remaining <= 0) {
+1612|      clearInterval(countdownInterval);
+1613|      if (el) el.textContent = '00:00';
+1614|    }
+1615|  }, 1000);
+1616|}
+1617|
+1618|function formatCountdown(seconds) {
+1619|  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+1620|  const s = (seconds % 60).toString().padStart(2, '0');
+1621|  return `${m}:${s}`;
+1622|}
+1623|
+1624|// ---------- PRESENT MODE ----------
+1625|function present() {
+1626|  const frame = document.getElementById('previewArea');
+1627|  if (frame.requestFullscreen) {
+1628|    frame.requestFullscreen();
+1629|  } else if (frame.webkitRequestFullscreen) {
+1630|    frame.webkitRequestFullscreen();
+1631|  }
+1632|  App.isPresenting = true;
+1633|  flashStatus('Presentation mode — ESC to exit');
+1634|}
+1635|
+1636|// ---------- STATUS FLASH ----------
+1637|let statusTimeout = null;
+1638|function flashStatus(msg) {
+1639|  const el = document.getElementById('statusText');
+1640|  el.textContent = msg;
+1641|  if (statusTimeout) clearTimeout(statusTimeout);
+1642|  statusTimeout = setTimeout(() => {
+1643|    el.textContent = 'Ready';
+1644|  }, 3000);
+1645|}
+1646|
+1647|// ---------- AI BUILDER ----------
+1648|function openAIBuilder() {
+1649|  const modal = document.getElementById('modalContent');
+1650|  modal.innerHTML = `
+1651|    <div class="ai-builder">
+1652|      <h2>Build a Deck with AI</h2>
+1653|      <p style="color:var(--text2);margin-bottom:12px;font-size:13px;">Describe your service and AI will generate a complete slide deck.</p>
+1654|      <textarea id="aiPrompt" placeholder="Example: Sunday morning service with 3 worship songs (Amazing Grace, How Great Thou Art, 10,000 Reasons), announcements for youth group Friday 7pm, sermon on John 3 about being born again, closing with communion"></textarea>
+1655|      <div class="ai-presets">
+1656|        <span class="ai-preset" onclick="setAIPreset('Sunday morning worship service with 3 songs, announcements, and a sermon on faith')">Sunday Service</span>
+1657|        <span class="ai-preset" onclick="setAIPreset('Wednesday Bible study on Romans 8 with discussion questions')">Bible Study</span>
+1658|        <span class="ai-preset" onclick="setAIPreset('Youth group night with games, worship, and a message on courage')">Youth Night</span>
+1659|        <span class="ai-preset" onclick="setAIPreset('Christmas Eve candlelight service with carols and nativity reading')">Christmas Eve</span>
+1660|      </div>
+1661|      <div style="margin-top:16px;">
+1662|        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">AI Provider</label>
+1663|        <select id="aiProvider" onchange="updateAIProviderUI()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+1664|          <option value="openai">OpenAI (GPT-4o)</option>
+1665|          <option value="anthropic">Anthropic (Claude)</option>
+1666|          <option value="custom">Custom (OpenAI-compatible)</option>
+1667|        </select>
+1668|      </div>
+1669|      <div id="aiKeyField" style="margin-top:12px;">
+1670|        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">API Key</label>
+1671|        <input type="password" id="aiKeyInput" value="${esc(App.settings.aiApiKey)}" placeholder="sk-..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+1672|      </div>
+1673|      <div id="aiUrlField" style="margin-top:12px;display:none;">
+1674|        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">API URL</label>
+1675|        <input type="text" id="aiUrlInput" placeholder="https://api.example.com/v1/chat/completions" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+1676|      </div>
+1677|      <div class="modal-actions">
+1678|        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+1679|        <button class="btn btn-primary" onclick="generateDeck()"> Generate Deck</button>
+1680|      </div>
+1681|    </div>
+1682|  `;
+1683|  document.getElementById('modalOverlay').classList.add('show');
+1684|  document.getElementById('aiProvider').value = App.settings.aiProvider || 'openai';
+1685|  updateAIProviderUI();
+1686|}
+1687|
+1688|function setAIPreset(text) {
+1689|  document.getElementById('aiPrompt').value = text;
+1690|}
+1691|
+1692|function updateAIProviderUI() {
+1693|  const provider = document.getElementById('aiProvider').value;
+1694|  document.getElementById('aiUrlField').style.display = provider === 'custom' ? 'block' : 'none';
+1695|}
+1696|
+1697|async function generateDeck() {
+1698|  const prompt = document.getElementById('aiPrompt').value.trim();
+1699|  const provider = document.getElementById('aiProvider').value;
+1700|  const key = document.getElementById('aiKeyInput').value.trim();
+1701|  let url = provider === 'custom' ? document.getElementById('aiUrlInput').value.trim() : '';
+1702|
+1703|  if (!prompt) { alert('Enter a description'); return; }
+1704|  if (!key) { alert('Enter your API key'); return; }
+1705|
+1706|  // Save settings
+1707|  App.settings.aiProvider = provider;
+1708|  App.settings.aiApiKey = key;
+1709|  save();
+1710|
+1711|  document.querySelector('#modalContent .btn-primary').textContent = ' Generating...';
+1712|  document.querySelector('#modalContent .btn-primary').disabled = true;
+1713|
+1714|  const systemPrompt = `You are a church presentation deck generator. Create a JSON array of slides for a church service. Each slide has: type (welcome, worship, verse, announcement, blank, countdown, notification), bg (black, white, gradient, worship, nature), and type-specific fields.
+1715|
+1716|Slide types and their fields:
+1717|- welcome: title, subtitle
+1718|- worship: title (song name), lyrics (text with \\n for line breaks)
+1719|- verse: verseRef (e.g. "John 3:16"), verseText
+1720|- announcement: title, text (\\n for lines)
+1721|- blank: (no fields)
+1722|- countdown: seconds (integer)
+1723|- notification: text
+1724|
+1725|Respond with ONLY a JSON array of slide objects. No markdown, no explanation. Example:
+1726|[{"type":"welcome","bg":"gradient","title":"Welcome","subtitle":"We're glad you're here"},{"type":"worship","bg":"worship","title":"Amazing Grace","lyrics":"Amazing grace, how sweet the sound\\nThat saved a wretch like me"}]`;
+1727|
+1728|  try {
+1729|    let apiResult;
+1730|    if (provider === 'openai' || provider === 'custom') {
+1731|      const apiUrl = url || 'https://api.openai.com/v1/chat/completions';
+1732|      apiResult = await callOpenAICompatible(apiUrl, key, prompt, systemPrompt, provider === 'openai' ? 'gpt-4o' : undefined);
+1733|    } else if (provider === 'anthropic') {
+1734|      apiResult = await callAnthropic(key, prompt, systemPrompt);
+1735|    }
+1736|
+1737|    let slides;
+1738|    // Try to extract JSON from response
+1739|    const jsonMatch = apiResult.match(/\[[\s\S]*\]/);
+1740|    if (jsonMatch) {
+1741|      slides = JSON.parse(jsonMatch[0]);
+1742|    } else {
+1743|      throw new Error('Could not parse AI response as JSON');
+1744|    }
+1745|
+1746|    // Create deck from AI output
+1747|    const deck = {
+1748|      id: 'deck-' + Date.now(),
+1749|      title: prompt.substring(0, 40) + (prompt.length > 40 ? '...' : ''),
+1750|      created: Date.now(),
+1751|      slides: slides,
+1752|    };
+1753|
+1754|    // Fetch any Bible verses that don't have text
+1755|    for (const slide of deck.slides) {
+1756|      if (slide.type === 'verse' && slide.verseRef && !slide.verseText) {
+1757|        try {
+1758|          const ref = slide.verseRef.replace(/\s+/g, '+');
+1759|          const resp = await fetch(`https://bible-api.com/${ref}?translation=${App.settings.bibleVersion}`);
+1760|          const data = await resp.json();
+1761|          if (data.text) slide.verseText = data.text.trim();
+1762|        } catch(e) { /* skip failed verse */ }
+1763|      }
+1764|    }
+1765|
+1766|    App.decks.push(deck);
+1767|    App.currentDeckId = deck.id;
+1768|    App.currentSlideIdx = 0;
+1769|    save();
+1770|    closeModal();
+1771|    renderAll();
+1772|    flashStatus(`Deck generated with ${deck.slides.length} slides!`);
+1773|  } catch(e) {
+1774|    alert('AI generation failed: ' + e.message);
+1775|    document.querySelector('#modalContent .btn-primary').textContent = ' Generate Deck';
+1776|    document.querySelector('#modalContent .btn-primary').disabled = false;
+1777|  }
+1778|}
+1779|
+1780|async function callOpenAICompatible(url, key, prompt, systemPrompt, model) {
+1781|  const body = {
+1782|    messages: [
+1783|      { role:'system', content:systemPrompt },
+1784|      { role:'user', content:prompt },
+1785|    ],
+1786|    temperature: 0.7,
+1787|  };
+1788|  if (model) body.model = model;
+1789|  const resp = await fetch(url, {
+1790|    method:'POST',
+1791|    headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${key}` },
+1792|    body: JSON.stringify(body),
+1793|  });
+1794|  if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
+1795|  const data = await resp.json();
+1796|  return data.choices[0].message.content;
+1797|}
+1798|
+1799|async function callAnthropic(key, prompt, systemPrompt) {
+1800|  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+1801|    method:'POST',
+1802|    headers: {
+1803|      'Content-Type':'application/json',
+1804|      'x-api-key':key,
+1805|      'anthropic-version':'2023-06-01',
+1806|      'anthropic-dangerous-direct-browser-access':'true',
+1807|    },
+1808|    body: JSON.stringify({
+1809|      model:'claude-sonnet-4-20250514',
+1810|      max_tokens:4096,
+1811|      system:systemPrompt,
+1812|      messages: [{ role:'user', content:prompt }],
+1813|    }),
+1814|  });
+1815|  if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
+1816|  const data = await resp.json();
+1817|  return data.content[0].text;
+1818|}
+1819|
+1820|// ---------- SETTINGS ----------
+1821|function openSettings() {
+1822|  const modal = document.getElementById('modalContent');
+1823|  modal.innerHTML = `
+1824|    <h2> Settings</h2>
+1825|    <div class="settings-row">
+1826|      <div><strong>Bible Version</strong><div style="font-size:12px;color:var(--text2);">Used for verse lookups</div></div>
+1827|      <select id="setBibleVer" style="padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+1828|        <option value="KJV" ${App.settings.bibleVersion==='KJV'?'selected':''}>KJV</option>
+1829|        <option value="ESV" ${App.settings.bibleVersion==='ESV'?'selected':''}>ESV</option>
+1830|        <option value="NIV" ${App.settings.bibleVersion==='NIV'?'selected':''}>NIV</option>
+1831|        <option value="WEB" ${App.settings.bibleVersion==='WEB'?'selected':''}>WEB</option>
+1832|        <option value="NASB" ${App.settings.bibleVersion==='NASB'?'selected':''}>NASB</option>
+1833|      </select>
+1834|    </div>
+1835|    <div class="settings-row">
+1836|      <div><strong>Voice Commands</strong><div style="font-size:12px;color:var(--text2);">Listen to mic for slide commands</div></div>
+1837|      <div class="toggle ${App.settings.voiceCommands?'on':''}" id="toggleVoice" onclick="App.settings.voiceCommands=!App.settings.voiceCommands;this.classList.toggle('on');save()"></div>
+1838|    </div>
+1839|    <div class="settings-row">
+1840|      <div><strong>Auto-Advance</strong><div style="font-size:12px;color:var(--text2);">AI follows audio and advances automatically</div></div>
+1841|      <div class="toggle ${App.settings.autoAdvance?'on':''}" id="toggleAuto" onclick="App.settings.autoAdvance=!App.settings.autoAdvance;this.classList.toggle('on');save()"></div>
+1842|    </div>
+1843|    <div class="settings-row">
+1844|      <div><strong>Export Data</strong><div style="font-size:12px;color:var(--text2);">Download all decks as JSON</div></div>
+1845|      <button class="btn btn-sm btn-secondary" onclick="exportData()">Export</button>
+1846|    </div>
+1847|    <div class="settings-row">
+1848|      <div><strong>Import Data</strong><div style="font-size:12px;color:var(--text2);">Upload a JSON backup</div></div>
+1849|      <button class="btn btn-sm btn-secondary" onclick="document.getElementById('importFile').click()">Import</button>
+1850|      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+1851|    </div>
+1852|    <div class="modal-actions">
+1853|      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+1854|    </div>
+1855|  `;
+1856|  document.getElementById('modalOverlay').classList.add('show');
+1857|
+1858|  document.getElementById('setBibleVer').onchange = function() {
+1859|    App.settings.bibleVersion = this.value;
+1860|    save();
+1861|  };
+1862|}
+1863|
+1864|function exportData() {
+1865|  const blob = new Blob([JSON.stringify({decks:App.decks, settings:App.settings}, null, 2)], { type:'application/json' });
+1866|  const url = URL.createObjectURL(blob);
+1867|  const a = document.createElement('a');
+1868|  a.href = url;
+1869|  a.download = 'crosspresenter-backup.json';
+1870|  a.click();
+1871|}
+1872|
+1873|function importData(event) {
+1874|  const file = event.target.files[0];
+1875|  if (!file) return;
+1876|  const reader = new FileReader();
+1877|  reader.onload = (e) => {
+1878|    try {
+1879|      const data = JSON.parse(e.target.result);
+1880|      if (data.decks) App.decks = data.decks;
+1881|      if (data.settings) Object.assign(App.settings, data.settings);
+1882|      save();
+1883|      renderAll();
+1884|      closeModal();
+1885|    } catch(e) { alert('Invalid file'); }
+1886|  };
+1887|  reader.readAsText(file);
+1888|}
+1889|
+1890|// ---------- MODAL ----------
+1891|function closeModal() {
+1892|  document.getElementById('modalOverlay').classList.remove('show');
+1893|}
+1894|
+1895|// ---------- KEYBOARD ----------
+1896|document.addEventListener('keydown', (e) => {
+1897|  // Don't intercept if typing in input
+1898|  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+1899|  if (document.getElementById('modalOverlay').classList.contains('show')) {
+1900|    if (e.key === 'Escape') closeModal();
+1901|    return;
+1902|  }
+1903|
+1904|  switch(e.key) {
+1905|    case 'ArrowRight': case ' ': case 'PageDown':
+1906|      e.preventDefault(); nextSlide(); break;
+1907|    case 'ArrowLeft': case 'PageUp':
+1908|      e.preventDefault(); prevSlide(); break;
+1909|    case 'Home': goToSlide(0); break;
+1910|    case 'End': const d=getDeck(); if(d) goToSlide(d.slides.length-1); break;
+1911|    case 'Escape':
+1912|      if (App.isPresenting) { App.isPresenting = false; }
+1913|      if (document.fullscreenElement) document.exitFullscreen();
+1914|      break;
+1915|    case 'f': case 'F':
+1916|      present(); break;
+1917|    case 'b': case 'B':
+1918|      addBlankSlide(); break;
+1919|  }
+1920|});
+1921|
+1922|// ---------- UTIL ----------
+1923|function esc(str) {
+1924|  if (!str) return '';
+1925|  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+1926|}
+1927|
+1928|// ---------- RENDER ALL ----------
+1929|function renderAll() {
+1930|  renderDeckList();
+1931|  renderCurrentSlide();
+1932|  renderThumbs();
+1933|}
+1934|
+1935|// ---------- INIT ----------
+1936|load();
+1937|renderAll();
+1938|
+1939|// Service worker registration
+1940|if ('serviceWorker' in navigator) {
+1941|  navigator.serviceWorker.register('sw.js').catch(() => {});
+1942|}
+1943|
+1944|// Handle countdown when slide changes
+1945|const observer = new MutationObserver(() => {
+1946|  const cd = document.getElementById('countdownEl');
+1947|  if (cd) {
+1948|    const deck = getDeck();
+1949|    if (deck) {
+1950|      const slide = deck.slides[App.currentSlideIdx];
+1951|      if (slide && slide.type === 'countdown') startCountdown(slide.seconds);
+1952|    }
+1953|  }
+1954|});
+1955|observer.observe(document.getElementById('slideCanvas'), { childList:true, subtree:true });
+1956|</script>
+1957|</body>
+1958|</html>
+1959|
