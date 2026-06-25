@@ -1,4 +1,4 @@
-const CACHE = 'crosspresenter-v8';
+const CACHE = 'crosspresenter-v9';
 const ASSETS = [
   './',
   './index.html',

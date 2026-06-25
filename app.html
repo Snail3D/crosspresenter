@@ -612,6 +612,9 @@ function addSlide(type='welcome') {
 function deleteSlide(idx) {
   const deck = getDeck();
   if (!deck) return;
+  const slide = deck.slides[idx];
+  const name = getThumbTitle(slide);
+  if (!confirm(`Delete slide ${idx + 1} (${name})?`)) return;
   deck.slides.splice(idx, 1);
   if (App.currentSlideIdx >= deck.slides.length) App.currentSlideIdx = deck.slides.length - 1;
   if (App.currentSlideIdx < 0) App.currentSlideIdx = 0;
@@ -865,22 +868,42 @@ function toggleVoice() {
 function startVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    alert('Voice recognition not supported in this browser. Try Chrome or Edge.');
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <h2>Voice Recognition Not Available</h2>
+      <p style="color:var(--text2);line-height:1.6;margin-bottom:12px;">Your browser doesn't support the Web Speech API, which powers CrossPresenter's voice commands and scripture detection.</p>
+      <p style="color:var(--text2);line-height:1.6;margin-bottom:12px;"><strong>Supported browsers:</strong></p>
+      <ul style="color:var(--text2);line-height:1.8;margin-left:20px;margin-bottom:12px;">
+        <li>Google Chrome (recommended)</li>
+        <li>Microsoft Edge</li>
+        <li>Safari 14.1+ (macOS only, limited)</li>
+      </ul>
+      <p style="color:var(--text3);font-size:12px;">Note: Voice features require microphone access and a secure (HTTPS) connection.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeModal()">Got it</button>
+      </div>`;
+    document.getElementById('modalOverlay').classList.add('show');
     return;
   }
 
   App.recognition = new SR();
   App.recognition.continuous = true;
-  App.recognition.interimResults = false;
+  App.recognition.interimResults = true;
   App.recognition.lang = 'en-US';
 
   App.recognition.onresult = (event) => {
-    const transcript = event.results[event.results.length - 1][0].transcript.trim();
-    console.log('Voice:', transcript);
-    const lower = transcript.toLowerCase();
+    const last = event.results[event.results.length - 1];
+    const transcript = last[0].transcript.trim();
+    const isFinal = last.isFinal;
+    console.log('Voice:', transcript, isFinal ? '(final)' : '(interim)');
 
     // Show live transcript overlay
     showTranscript(transcript);
+
+    // Only process final results for commands/detection to avoid duplicates
+    if (!isFinal) return;
+
+    const lower = transcript.toLowerCase();
 
     // 1. Run scripture detection on everything spoken
     const detections = detectScriptures(transcript);
@@ -898,9 +921,22 @@ function startVoice() {
 
   App.recognition.onerror = (e) => {
     console.error('Voice error:', e.error);
-    if (e.error === 'not-allowed') {
-      alert('Microphone access denied. Please allow microphone access in your browser settings.');
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       stopVoice();
+      const modal = document.getElementById('modalContent');
+      modal.innerHTML = `
+        <h2>Microphone Access Needed</h2>
+        <p style="color:var(--text2);line-height:1.6;margin-bottom:12px;">CrossPresenter needs microphone access for voice commands and live scripture detection.</p>
+        <p style="color:var(--text2);line-height:1.6;margin-bottom:12px;">Click the camera/mic icon in your browser's address bar and allow microphone access, then try again.</p>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="closeModal()">Got it</button>
+        </div>`;
+      document.getElementById('modalOverlay').classList.add('show');
+    } else if (e.error === 'no-speech') {
+      console.log('No speech detected, continuing...');
+    } else if (e.error === 'network') {
+      stopVoice();
+      flashStatus('Voice error: network issue');
     }
   };
 
